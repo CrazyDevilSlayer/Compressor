@@ -199,7 +199,7 @@ async def callback(event):
             KeyBoard.append([Button.inline(f'🪓Split Video - {str(split_video)}', 'nik66bots')])
             for board in gen_keyboard(bool_list, split_video, "generalsplitvideo", 2, False):
                 KeyBoard.append(board)
-            KeyBoard.append([Button.inline(f'🛢Split Size - {str(split_video)}', 'nik66bots')])
+            KeyBoard.append([Button.inline(f'🛢Split Size - {str(split)}', 'nik66bots')])
             for board in gen_keyboard(['2GB', '4GB'], split, "generalsplit", 2, False):
                 KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'🖼Custom Thumbnail - {str(custom_thumbnail)}', 'nik66bots')])
