@@ -352,9 +352,13 @@ async def get_filename(event, user_id, userx, process_id, ext, detailed_message,
                     ext = data[-1]
             else:
                 filename = new_event.message.message
-    for ele in punc:
-        if ele in filename:
-                filename = filename.replace(ele, '')
+    try:
+        for ele in punc:
+            if ele in filename:
+                    filename = filename.replace(ele, '')
+    except:
+        filename = process_id
+        
     if not ext:
         async with Client.conversation(user_id) as conv:
             handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: e.message.message), timeout=timeout)
