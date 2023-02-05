@@ -321,7 +321,7 @@ def get_logs_msg(log_file):
                 logFileLines = f.read().splitlines()
     Loglines = ''
     ind = 1
-    if len(Loglines):
+    if len(logFileLines):
         while len(Loglines) <= 3000:
             Loglines = logFileLines[-ind]+'\n'+Loglines
             if ind == len(logFileLines): break
