@@ -7,10 +7,13 @@ from dotenv import load_dotenv
 from os.path import exists
 from telethon.sessions import StringSession
 
+
+###############------Import_Config------###############
 if exists('config.env'):
-  load_dotenv('config.env')
-  
-  
+    load_dotenv('config.env')
+
+
+###############------Logging------###############
 if exists("Logging.txt"):
     with open("Logging.txt", "r+") as f_d:
         f_d.truncate(0)
@@ -27,11 +30,11 @@ basicConfig(
         StreamHandler(),
     ],
 )
+
 getLogger("telethon").setLevel(ERROR)
 
 
-        
-        
+###############------Get_Data_From_MongoDB------###############
 def get_mongo_data(MONGODB_URI, BOT_USERNAME, id, colz):
         mongo_client = MongoClient(MONGODB_URI)
         mongo_db = mongo_client[BOT_USERNAME]
@@ -49,6 +52,7 @@ def get_mongo_data(MONGODB_URI, BOT_USERNAME, id, colz):
             return "{}"
 
 
+###############------Config_Section------###############
 class Config:
     API_ID = int(getenv("API_ID",""))
     API_HASH = getenv("API_HASH","")

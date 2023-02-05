@@ -4,19 +4,23 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pytz import timezone
 
 
+#////////////////////////////////////Variables////////////////////////////////////#
 IST = timezone('Asia/Kolkata')
 if Config.SAVE_TO_DATABASE:
     bot_username = Config.BOT_USERNAME
     MONGODB_URI = Config.MONGODB_URI
 
 
-
+#////////////////////////////////////Database////////////////////////////////////#
 class Database:
+    
+    ###############------INIT------###############
     def __init__(self):
         self._client = AsyncIOMotorClient(MONGODB_URI)
         self.db = self._client[bot_username]
 
 
+###############------Add_DATA_To_Database------###############
     async def add_datam(self, datam, id, colz):
         try:
                 col = self.db[colz]
@@ -46,6 +50,8 @@ class Database:
             print(e)
             return False
 
+
+###############------Other_Functions------###############
     async def is_data_exist(self, id, colz):
         col = self.db[colz]
         chat = await col.find_one({'id': id})

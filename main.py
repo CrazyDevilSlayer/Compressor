@@ -5,13 +5,14 @@ from helper_fns.Helper import clear_restart
 from pathlib import Path
 from glob import glob
 
-
+#////////////////////////////////////Variables////////////////////////////////////#
 working_dir = "./bot"
 files = glob(f'{working_dir}/*.py')
 User_Data = Config.User_Data
 sudo_users = Config.SUDO_USERS
 
 
+###############------Load_Plugins------###############
 def load_plugins(plugin_name):
     path = Path(f"{working_dir}/{plugin_name}.py")
     name = "main.plugins.{}".format(plugin_name)
@@ -22,18 +23,19 @@ def load_plugins(plugin_name):
     print("🔷Successfully Imported " + plugin_name)
     return
 
-
+###############------Get_Plugins------###############
 for name in files:
     with open(name) as a:
         patt = Path(a.name)
         plugin_name = patt.stem
         load_plugins(plugin_name.replace(".py", ""))
 
-
+###############------Get_Client_Details-----###############
 async def get_me(client):
     return await client.get_me()
 
 
+###############------Check_Restart------###############
 async def check_restart():
     try:
         chat, msg_id = User_Data['restart'][0]
@@ -43,7 +45,7 @@ async def check_restart():
         print("🧩Error While Updating Restart Message:\n\n", e)
     return
 
-
+###############------Start_User_Session------###############
 def start_user_account():
     Config.USER.start()
     user = Config.client.loop.run_until_complete(get_me(Config.USER))
@@ -55,6 +57,7 @@ def start_user_account():
     print(f'🔒Session For {first_name} Started Successfully!🔒')
     return
 
+###############------Restart_Notification------###############
 async def notify_restart(RESTART_NOTIFY_ID):
     try:
         await Config.client.send_message(RESTART_NOTIFY_ID, "⚡Bot Started Successfully⚡")

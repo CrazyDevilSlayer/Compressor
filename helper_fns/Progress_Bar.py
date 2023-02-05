@@ -4,6 +4,7 @@ from telethon.errors import FloodWaitError
 from time import time
 
 
+###############------Get_Progress_Bar------###############
 def get_progress_bar_string(current,total):
     completed = int(current) / 8
     total = int(total) / 8
@@ -16,6 +17,7 @@ def get_progress_bar_string(current,total):
     return p_str
 
 
+###############------Get_Progress_Bar_From_Percentage------###############
 def get_progress_bar_from_percentage(percentage):
     try:
         p = int(percentage)
@@ -29,6 +31,7 @@ def get_progress_bar_from_percentage(percentage):
     return p_str
 
 
+###############------Progress_Updater------###############
 async def progress_bar(current,total,reply, start, datam, userx, timer):
       if timer.can_send():
         diff = time() - start

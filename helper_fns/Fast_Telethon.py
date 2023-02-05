@@ -39,7 +39,6 @@ from telethon.tl.types import (
     InputPhotoFileLocation,
     TypeInputFile,
 )
-from helper_fns.Ruunung_Process import get_sub_process, get_master_process
 from helper_fns.Helper import process_checker
 
 

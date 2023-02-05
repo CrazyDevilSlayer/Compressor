@@ -4,11 +4,15 @@ from math import ceil
 from os.path import getsize, join
 from config import Config
 
+
+#////////////////////////////////////Variables////////////////////////////////////#
 LOGGER = Config.LOGGER
 
 
+
+#////////////////////////////////////Video_Engine////////////////////////////////////#
 class Processor:
-    
+    ###############------Compressor------###############
     async def compress(Client, reply, user_id, userx, input_file, progress, amap_options, output_file, duration, check_data, datam):
         compress_encoder = USER_DATA()[userx]['compress']['encoder']
         compress_preset = USER_DATA()[userx]['compress']['preset']
@@ -39,6 +43,7 @@ class Processor:
         else:
             return False
 
+    ###############------Split_Video------###############
     async def split_video_file(Client, new_event, user_id, userx, reply, split_size, dirpath, file, file_name, progress, duration, datam, check_data, extension):
         success = []
         trash_list = []

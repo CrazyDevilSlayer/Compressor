@@ -1,14 +1,14 @@
 from telethon import events
 from telethon.tl.custom import Button
 from config import Config
-from helper_fns.Helper import USER_DATA, saveconfig, check_file_exists, delete_all, delete_trash,saveoptions, get_config
+from helper_fns.Helper import USER_DATA, saveconfig, delete_all, delete_trash,saveoptions, get_config
 from os import listdir
 from os.path import isfile, exists
 
 
 
 
-############Variables##############
+#////////////////////////////////////Variables////////////////////////////////////#
 sudo_users = Config.SUDO_USERS
 encoders_list = ['libx265', 'libx264']
 crf_list = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51']
@@ -20,10 +20,9 @@ punc = ['!', '|', '{', '}', ';', ':', "'", '=', '"', '\\', ',', '<', '>', '/', '
 SAVE_TO_DATABASE = Config.SAVE_TO_DATABASE
 
 
+#////////////////////////////////////Functions////////////////////////////////////#
 def get_mention(event):
     return "["+event.sender.first_name+"](tg://user?id="+str(event.sender.id)+")"
-
-
 
 def gen_keyboard(values_list, current_value, callvalue, items, hide):
     boards = []
@@ -48,7 +47,6 @@ def gen_keyboard(values_list, current_value, callvalue, items, hide):
     boards.append(current_list)
     return boards
 
-
 async def get_metadata(user_id, userx, event, timeout, message):
     async with Client.conversation(user_id) as conv:
             handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: e.message.message), timeout=timeout)
@@ -66,14 +64,12 @@ async def get_metadata(user_id, userx, event, timeout, message):
             return metadata
 
 
-
+#////////////////////////////////////Callbacks////////////////////////////////////#
 @Client.on(events.CallbackQuery)
 async def callback(event):
         txt = event.data.decode()
         user_id = event.chat.id
         userx = event.sender.id
-        
-        
         
         if txt.startswith("settings"):
             text = f"⚙ Hi {get_mention(event)} Choose Your Settings"
@@ -236,7 +232,6 @@ async def callback(event):
                 await Client.send_message(user_id, "⚙ General Settings", buttons=KeyBoard)
             return
         
-
         elif txt.startswith("progress"):
             new_position = txt.split("_", 1)[1]
             KeyBoard = []

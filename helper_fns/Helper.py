@@ -15,122 +15,28 @@ from typing import Tuple
 from configparser import ConfigParser
 from datetime import datetime
 from pytz import timezone
+from string import ascii_lowercase, digits
+from random import choices
 
 
+
+#////////////////////////////////////Variables////////////////////////////////////#
 if Config.SAVE_TO_DATABASE:
     db = Database()
     CREDIT = Config.CREDIT
-
-
-############Variables##############
 IST = timezone('Asia/Kolkata')
 User_Data = Config.User_Data
 botStartTime = time()
 
 
-############Helper Functions##############
-def get_readable_time(seconds: int) -> str:
-    result = ''
-    (days, remainder) = divmod(seconds, 86400)
-    days = int(days)
-    if days != 0:
-        result += f'{days}d'
-    (hours, remainder) = divmod(remainder, 3600)
-    hours = int(hours)
-    if hours != 0:
-        result += f'{hours}h'
-    (minutes, seconds) = divmod(remainder, 60)
-    minutes = int(minutes)
-    if minutes != 0:
-        result += f'{minutes}m'
-    seconds = int(seconds)
-    result += f'{seconds}s'
-    return result
 
+#////////////////////////////////////Database////////////////////////////////////#
 
-def time_formatter(milliseconds: int) -> str:
-    """Inputs time in milliseconds, to get beautified time,
-    as string"""
-    seconds, milliseconds = divmod(int(milliseconds), 1000)
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    days, hours = divmod(hours, 24)
-    tmp = (((str(days) + "d, ") if days else "") +
-           ((str(hours) + "h, ") if hours else "") +
-           ((str(minutes) + "m, ") if minutes else "") +
-           ((str(seconds) + "s, ") if seconds else "") +
-           ((str(milliseconds) + "ms, ") if milliseconds else ""))
-    return tmp[:-2]
-
-
-def get_human_size(num):
-    base = 1024.0
-    sufix_list = ['B','KB','MB','GB','TB','PB','EB','ZB', 'YB']
-    for unit in sufix_list:
-        if abs(num) < base:
-            return f"{round(num, 2)} {unit}"
-        num /= base
-
-def get_size(size):
-    units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
-    size = float(size)
-    i = 0
-    while size >= 1024.0 and i < len(units):
-        i += 1
-        size /= 1024.0
-    return "%.2f %s" % (size, units[i])
-
-class Timer:
-    def __init__(self, time_between=5):
-        self.start_time = time()
-        self.time_between = time_between
-
-    def can_send(self):
-        if time() > (self.start_time + self.time_between):
-            self.start_time = time()
-            return True
-        return False
-
-def get_time():
-    return time()
-
-
-def hrb(value, digits= 2, delim= "", postfix=""):
-    """Return a human-readable file size.
-    """
-    if value is None:
-        return None
-    chosen_unit = "B"
-    for unit in ("KB", "MB", "GB", "TB"):
-        if value > 1000:
-            value /= 1024
-            chosen_unit = unit
-        else:
-            break
-    return f"{value:.{digits}f}" + delim + chosen_unit + postfix
-
-
-def getbotuptime():
-    return get_readable_time(time() - botStartTime)
-
-
-def TimeFormatter(milliseconds: int) -> str:
-    seconds, milliseconds = divmod(int(milliseconds), 1000)
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    days, hours = divmod(hours, 24)
-    tmp = ((str(days) + "d, ") if days else "") + \
-        ((str(hours) + "h, ") if hours else "") + \
-        ((str(minutes) + "m, ") if minutes else "") + \
-        ((str(seconds) + "s, ") if seconds else "") + \
-        ((str(milliseconds) + "ms, ") if milliseconds else "")
-    return tmp[:-2]
-
-##########Save Token###############
+###############------Return_Database------###############
 def USER_DATA():
     return User_Data
 
-#########gen data###########
+###############------New_User------###############
 async def new_user(user_id, dbsave):
         User_Data[user_id] = {}
         User_Data[user_id]['watermark'] = {}
@@ -203,26 +109,7 @@ async def new_user(user_id, dbsave):
             data = True
         return data
 
-
-##########Save Token###############
-async def saveconfig(user_id, dname, pos, value, dbsave):
-    try:
-        if user_id not in User_Data:
-            User_Data[user_id] = {}
-            User_Data[user_id][dname] = {}
-            User_Data[user_id][dname][pos] = value
-        else:
-            User_Data[user_id][dname][pos] = value
-        if dbsave:
-            data = await db.add_datam(str(User_Data), CREDIT, "User_Data")
-        else:
-            data = True
-        return data
-    except Exception as e:
-        print(e)
-        return False
-    
-##########options###############
+###############------Save_Config------###############
 async def saveoptions(user_id, dname, value, dbsave):
     try:
         if user_id not in User_Data:
@@ -240,7 +127,25 @@ async def saveoptions(user_id, dname, value, dbsave):
         print(e)
         return False
     
-##########Save Restart Message Id###############
+###############------Save_Sub_Config------###############
+async def saveconfig(user_id, dname, pos, value, dbsave):
+    try:
+        if user_id not in User_Data:
+            User_Data[user_id] = {}
+            User_Data[user_id][dname] = {}
+            User_Data[user_id][dname][pos] = value
+        else:
+            User_Data[user_id][dname][pos] = value
+        if dbsave:
+            data = await db.add_datam(str(User_Data), CREDIT, "User_Data")
+        else:
+            data = True
+        return data
+    except Exception as e:
+        print(e)
+        return False
+
+###############------Save_Restart_IDs------###############
 async def save_restart(chat_id, msg_id):
     try:
         if 'restart' not in User_Data:
@@ -254,8 +159,7 @@ async def save_restart(chat_id, msg_id):
         print(e)
         return False
     
-
-##########Clear Restart Message Id###############
+###############------Clear_Restart_IDs------###############
 async def clear_restart():
     try:
         User_Data['restart'] = []
@@ -265,17 +169,102 @@ async def clear_restart():
         print(e)
         return False
 
-##########Delete Token###############
-async def deleteconfig(user_id, dname, pos):
-        try:
-            del User_Data[user_id][dname][pos]
-            data = await db.add_datam(str(User_Data), CREDIT, "User_Data")
-            return data
-        except Exception as e:
-            print(e)
-            return False
 
-##########Clean##########
+#////////////////////////////////////Functions////////////////////////////////////#
+
+###############------Time_Functions------###############
+def get_readable_time(seconds: int) -> str:
+    result = ''
+    (days, remainder) = divmod(seconds, 86400)
+    days = int(days)
+    if days != 0:
+        result += f'{days}d'
+    (hours, remainder) = divmod(remainder, 3600)
+    hours = int(hours)
+    if hours != 0:
+        result += f'{hours}h'
+    (minutes, seconds) = divmod(remainder, 60)
+    minutes = int(minutes)
+    if minutes != 0:
+        result += f'{minutes}m'
+    seconds = int(seconds)
+    result += f'{seconds}s'
+    return result
+
+
+class Timer:
+    def __init__(self, time_between=5):
+        self.start_time = time()
+        self.time_between = time_between
+
+    def can_send(self):
+        if time() > (self.start_time + self.time_between):
+            self.start_time = time()
+            return True
+        return False
+
+def get_time():
+    return time()
+
+
+def getbotuptime():
+    return get_readable_time(time() - botStartTime)
+
+
+def TimeFormatter(milliseconds: int) -> str:
+    seconds, milliseconds = divmod(int(milliseconds), 1000)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+    tmp = ((str(days) + "d, ") if days else "") + \
+        ((str(hours) + "h, ") if hours else "") + \
+        ((str(minutes) + "m, ") if minutes else "") + \
+        ((str(seconds) + "s, ") if seconds else "") + \
+        ((str(milliseconds) + "ms, ") if milliseconds else "")
+    return tmp[:-2]
+
+
+def get_current_time():
+    return str(datetime.now(IST).strftime('%I:%M:%S %p (%d-%b)'))
+
+
+###############------Size_Functions------###############
+def get_human_size(num):
+    base = 1024.0
+    sufix_list = ['B','KB','MB','GB','TB','PB','EB','ZB', 'YB']
+    for unit in sufix_list:
+        if abs(num) < base:
+            return f"{round(num, 2)} {unit}"
+        num /= base
+
+def get_size(size):
+    units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
+    size = float(size)
+    i = 0
+    while size >= 1024.0 and i < len(units):
+        i += 1
+        size /= 1024.0
+    return "%.2f %s" % (size, units[i])
+
+
+def hrb(value, digits= 2, delim= "", postfix=""):
+    """Return a human-readable file size.
+    """
+    if value is None:
+        return None
+    chosen_unit = "B"
+    for unit in ("KB", "MB", "GB", "TB"):
+        if value > 1000:
+            value /= 1024
+            chosen_unit = unit
+        else:
+            break
+    return f"{value:.{digits}f}" + delim + chosen_unit + postfix
+
+
+#////////////////////////////////////File_System_Functions////////////////////////////////////#
+
+###############------Delete_File------###############
 async def delete_trash(file):
     try:
         remove(file)
@@ -283,7 +272,7 @@ async def delete_trash(file):
         pass
     return
 
-######Delete Folder##########
+###############------Delete_Directory------###############
 async def delete_all(dir):
     try:
         rmtree(dir)
@@ -291,13 +280,8 @@ async def delete_all(dir):
         pass
     return
 
-########Background#############
-async def create_backgroud_task(x):
-    task = get_event_loop().create_task(x)
-    return task
 
-
-#########Process FFmpeg##########
+###############------Create_Progress_File------###############
 async def create_process_file(file):
     if exists(file):
         remove(file)
@@ -305,7 +289,7 @@ async def create_process_file(file):
             pass
     return
 
-#######Make Dir############
+###############------Make_Directory------###############
 async def make_direc(direc):
     try:
         if not isdir(direc):
@@ -315,7 +299,58 @@ async def make_direc(direc):
     return direc
 
 
-#######get media duration######
+###############------Check_File_Exists------###############
+async def check_file_exists(file):
+    if exists(file):
+        return True
+    else:
+        return False
+    
+
+###############------Check_Files_Exists------###############
+async def check_files_exists(files):
+    for file in files:
+        if not exists(file):
+            return False
+    return True
+
+
+###############------Get_Logs_From_File------###############
+def get_logs_msg(log_file):
+    with open(log_file, 'r', encoding="utf-8") as f:
+                logFileLines = f.read().splitlines()
+                Loglines = ''
+                ind = 1
+                while len(Loglines) <= 3000:
+                    Loglines = logFileLines[-ind]+'\n'+Loglines
+                    if ind == len(logFileLines): break
+                    ind += 1
+                startLine = f"Generated Last {ind} Lines from {str(log_file)}: \n\n---------------- START LOG -----------------\n\n"
+                endLine = "\n---------------- END LOG -----------------"
+                return startLine+Loglines+endLine
+
+
+###############------Clear_Trash_List------###############
+async def clear_trash_list(trash_list):
+    for t in trash_list:
+            try:
+                remove(t)
+                trash_list.remove(t)
+            except:
+                pass
+    return
+
+
+#////////////////////////////////////Commands////////////////////////////////////#
+
+###############------Create_Background_Task------###############
+async def create_backgroud_task(x):
+    task = get_event_loop().create_task(x)
+    return task
+
+
+
+###############------Get_Media_Duration------###############
 def get_video_duration(filename):
     result = subprocessrun(["ffprobe", "-v", "error", "-show_entries",
                              "format=duration", "-of",
@@ -329,18 +364,56 @@ def get_video_duration(filename):
     return duration
 
 
-#######cleartrashlist########
-async def clear_trash_list(trash_list):
-    for t in trash_list:
-            try:
-                remove(t)
-                trash_list.remove(t)
-            except:
-                pass
-    return
+
+###############------Get_Process_Output------###############
+async def execute(cmnd: str) -> Tuple[str, str, int, int]:
+    print(cmnd)
+    cmnds = shlexsplit(cmnd)
+    process = await create_subprocess_exec(
+        *cmnds,
+        stdout=PIPE,
+        stderr=PIPE
+    )
+    stdout, stderr = await process.communicate()
+    return stdout.decode('utf-8', 'replace').strip()
 
 
-######Bot Stats###########
+
+#////////////////////////////////////Other_Functions////////////////////////////////////#
+
+
+###############------Rclone_Accounts------###############
+async def get_config(file):
+    try:
+        config = ConfigParser(default_section=False)
+        config.read(file, encoding="utf-8")
+        accounts = []
+        for d in config:
+            if d:
+                accounts.append(str(d))
+        if len(accounts):
+            return accounts
+        else:
+            return False
+    except Exception as e:
+        print(e)
+        return False
+
+
+###############------Generate_Random_String------###############
+def gen_random_string(k):
+    return str(''.join(choices(ascii_lowercase + digits, k=k)))
+
+
+###############------Check_Process------###############
+async def process_checker(check_data):
+    for data in check_data:
+        if data[0] not in data[1]:
+            return False
+    return True
+
+
+###############------Get_Bot_Stats------###############
 def get_stats(userx):
         if User_Data[userx]['show_stats']:
             total, used, free, disk = disk_usage('/')
@@ -354,46 +427,9 @@ def get_stats(userx):
         else:
             stats =f'🚀CPU Usage: {cpu_percent(interval=0.5)}%'
         return stats
-    
-
-#########check file########
-async def check_file_exists(file):
-    if exists(file):
-        return True
-    else:
-        return False
-    
-
-#########check files########
-async def check_files_exists(files):
-    for file in files:
-        if not exists(file):
-            return False
-    return True
-
-#########process checker########
-async def process_checker(check_data):
-    for data in check_data:
-        if data[0] not in data[1]:
-            return False
-    return True
 
 
-
-########get stream output#######
-async def execute(cmnd: str) -> Tuple[str, str, int, int]:
-    print(cmnd)
-    cmnds = shlexsplit(cmnd)
-    process = await create_subprocess_exec(
-        *cmnds,
-        stdout=PIPE,
-        stderr=PIPE
-    )
-    stdout, stderr = await process.communicate()
-    return stdout.decode('utf-8', 'replace').strip()
-
-
-#########Compress Details########
+###############------Detailed_Message------###############
 def get_details(pmode, userx, head):
     if User_Data[userx]['detailed_messages']:
         if pmode=="compress":
@@ -414,24 +450,3 @@ def get_details(pmode, userx, head):
             return text
     else:
         return False
-
-######Get Rclone Config##########
-async def get_config(file):
-    try:
-        config = ConfigParser(default_section=False)
-        config.read(file, encoding="utf-8")
-        accounts = []
-        for d in config:
-            if d:
-                accounts.append(str(d))
-        if len(accounts):
-            return accounts
-        else:
-            return False
-    except Exception as e:
-        print(e)
-        return False
-
-#########Get Current Time##########
-def get_current_time():
-    return str(datetime.now(IST).strftime('%I:%M:%S %p (%d-%b)'))

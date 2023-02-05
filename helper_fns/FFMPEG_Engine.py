@@ -12,7 +12,7 @@ from telethon.errors import FloodWaitError
 from config import Config
 
 
-
+#////////////////////////////////////Variables////////////////////////////////////#
 all_data = []
 msg_data = ['Processing']
 running_process = []
@@ -20,7 +20,9 @@ wpositions = {'5:5': 'Top Left', 'main_w-overlay_w-5:5': 'Top Right', '5:main_h-
 LOGGER = Config.LOGGER
 
 
-#############Checker################
+#////////////////////////////////////Functions////////////////////////////////////#
+
+###############------Task_Checker------###############
 async def check_task(check_data):
     while True:
         await assleep(1)
@@ -29,8 +31,7 @@ async def check_task(check_data):
             break
     return
 
-
-###########Logger###################
+###############------Logger------###############
 async def get_logs(process, check_data):
         while True:
                     try:
@@ -48,7 +49,89 @@ async def get_logs(process, check_data):
                     else:
                             break
         return
-    
+
+###############------Cleaner------###############
+async def clear_tasks(task, pending, process, update_msg, log_task):
+    if task not in pending:
+                try:
+                        print("🔶Terminating Process")
+                        process.terminate()
+                except Exception as e:
+                        print(e)
+    else:
+                try:
+                        print("🔶Cancelling Task")
+                        task.cancelled()
+                        await task
+                except Exception as e:
+                        print(e)
+    try:
+            print("🔶Cancelling Updater")
+            update_msg.cancelled()
+            await update_msg
+    except Exception as e:
+            print(e)
+    if log_task:
+        try:
+                print("🔶Cancelling Logger")
+                log_task.cancelled()
+                await log_task
+        except Exception as e:
+                print(e)
+    return
+
+
+#////////////////////////////////////FFMPEG_Functions////////////////////////////////////#
+
+###############------FFMPEG_Engine------###############
+async def ffmpeg_engine(Client, user_id, userx, reply, command, input_file, output_file, progress, duration, check_data, datam, show_progress):
+    global all_data
+    global msg_data
+    print(command)
+    await create_process_file(progress)
+    await delete_trash(output_file)
+    all_data = []
+    msg_data = ['Processing']
+    process_start_time = get_time()
+    process = await create_subprocess_exec(
+            *command,
+            stdout=asyncioPIPE,
+            stderr=asyncioPIPE,
+            )
+    pid = process.pid
+    running_process.append(pid)
+    check_data.append([pid, running_process])
+    task = create_task(check_task(check_data))
+    log_task = create_task(get_logs(process.stderr, check_data))
+    update_msg = create_task(update_message(reply, userx, input_file, output_file, progress, duration, process_start_time, check_data, datam, show_progress))
+    done, pending = await asynciowait([task, process.wait()], return_when=FIRST_COMPLETED)
+    return_code = process.returncode
+    running_process.remove(pid)
+    await delete_trash(progress)
+    await clear_tasks(task, pending, process, update_msg, log_task)
+    del check_data[-1]
+    checker = await process_checker(check_data)
+    if not checker:
+        all_data = []
+        msg_data = ['Processing']
+        return [True, True]
+    elif return_code == 0:
+        all_data = []
+        msg_data = ['Processing']
+        return [True, False]
+    else:
+        cc=f"{str(datam[0])}\n\n❌{str(datam[3]).upper()} Process Failed\n\n🔶Return Code: {str(return_code)}"
+        fail_file = f"{str(datam[0])}_{str(datam[3]).upper()}_log.txt"
+        with open(fail_file, 'w', encoding="utf-8") as f:
+                f.write(str(all_data))
+        await Client.send_file(user_id, file=fail_file, allow_cache=False, caption=cc)
+        all_data = []
+        msg_data = ['Processing']
+        await delete_trash(fail_file)
+        await reply.edit(cc)
+        return [False]
+
+###############------Get_Values_FFMPEG------###############
 def get_value(dlist, dtype, value):
     if len(dlist):
         try:
@@ -57,10 +140,8 @@ def get_value(dlist, dtype, value):
             return value
     else:
         return value
-    
 
-
-############Update_Message################
+###############------FFMPEG_Progress_Updater------###############
 async def update_message(reply, userx, input_file, output_file, process_log, duration, process_start_time, check_data, datam, show_progress):
             if show_progress:
                 txt = ''
@@ -140,46 +221,15 @@ async def update_message(reply, userx, input_file, output_file, process_log, dur
                 except Exception as e:
                     print(e)
             return
-    
-    
-###########Clear Task And Processes################
-async def clear_tasks(task, pending, process, update_msg, log_task):
-    if task not in pending:
-                try:
-                        print("🔶Terminating Process")
-                        process.terminate()
-                except Exception as e:
-                        print(e)
-    else:
-                try:
-                        print("🔶Cancelling Task")
-                        task.cancelled()
-                        await task
-                except Exception as e:
-                        print(e)
-    try:
-            print("🔶Cancelling Updater")
-            update_msg.cancelled()
-            await update_msg
-    except Exception as e:
-            print(e)
-    if log_task:
-        try:
-                print("🔶Cancelling Logger")
-                log_task.cancelled()
-                await log_task
-        except Exception as e:
-                print(e)
-    return
+        
 
+#////////////////////////////////////Rclone_Functions////////////////////////////////////#
 
-###################FFMPEG Engine#############################
-async def ffmpeg_engine(Client, user_id, userx, reply, command, input_file, output_file, progress, duration, check_data, datam, show_progress):
+###############------Rclone_Engine------###############
+async def upload_rclone(Client, user_id, reply, command, userx, datam, search_command, check_data):
     global all_data
     global msg_data
     print(command)
-    await create_process_file(progress)
-    await delete_trash(output_file)
     all_data = []
     msg_data = ['Processing']
     process_start_time = get_time()
@@ -192,13 +242,11 @@ async def ffmpeg_engine(Client, user_id, userx, reply, command, input_file, outp
     running_process.append(pid)
     check_data.append([pid, running_process])
     task = create_task(check_task(check_data))
-    log_task = create_task(get_logs(process.stderr, check_data))
-    update_msg = create_task(update_message(reply, userx, input_file, output_file, progress, duration, process_start_time, check_data, datam, show_progress))
+    update_msg = create_task(update_rclone_message(process.stdout, userx, reply, datam, check_data, process_start_time))
     done, pending = await asynciowait([task, process.wait()], return_when=FIRST_COMPLETED)
     return_code = process.returncode
     running_process.remove(pid)
-    await delete_trash(progress)
-    await clear_tasks(task, pending, process, update_msg, log_task)
+    await clear_tasks(task, pending, process, update_msg, False)
     del check_data[-1]
     checker = await process_checker(check_data)
     if not checker:
@@ -208,10 +256,14 @@ async def ffmpeg_engine(Client, user_id, userx, reply, command, input_file, outp
     elif return_code == 0:
         all_data = []
         msg_data = ['Processing']
-        return [True, False]
+        drive_link = await getdrivelink(search_command)
+        if drive_link[0]:
+            return [True, False, True, drive_link[1]]
+        else:
+            return [True, False, False, drive_link[1]]
     else:
-        cc=f"{str(datam[0])}\n\n❌{str(datam[3]).upper()} Process Failed\n\n🔶Return Code: {str(return_code)}"
-        fail_file = f"{str(datam[0])}_{str(datam[3]).upper()}_log.txt"
+        cc=f"{str(datam[0])}\n\n❌Rclone Upload Process Failed\n\n🔶Return Code: {str(return_code)}"
+        fail_file = f"{str(datam[0])}_Rclone Upload_log.txt"
         with open(fail_file, 'w', encoding="utf-8") as f:
                 f.write(str(all_data))
         await Client.send_file(user_id, file=fail_file, allow_cache=False, caption=cc)
@@ -221,28 +273,7 @@ async def ffmpeg_engine(Client, user_id, userx, reply, command, input_file, outp
         await reply.edit(cc)
         return [False]
 
-
-############Rclone Drive Link##################
-async def getdrivelink(search_command):
-    process = await create_subprocess_exec(
-        *search_command, stdout=asyncioPIPE
-    )
-    stdout, _ = await process.communicate()
-    try:
-        stdout = stdout.decode().strip()
-        print(stdout)
-        data = loads(stdout)
-        gid = data[0]["ID"]
-        # name = data[0]["Name"]
-        link = f'https://drive.google.com/file/d/{gid}/view'
-        print(link)
-        return [True, link]
-    except Exception as e:
-        return [False, e]
-
-    
-
-############Rclone Message Updater############
+###############------Rclone_Progress_Updater------###############
 async def update_rclone_message(process, userx, reply, datam, check_data, process_start_time):
         timer = Timer(USER_DATA()[userx]['update_time'])
         txt = ''
@@ -306,58 +337,28 @@ async def update_rclone_message(process, userx, reply, datam, check_data, proces
                             break
         return
 
-
-##############Rclone##################
-async def upload_rclone(Client, user_id, reply, command, userx, datam, search_command, check_data):
-    global all_data
-    global msg_data
-    print(command)
-    all_data = []
-    msg_data = ['Processing']
-    process_start_time = get_time()
+###############------Get_Uploaded_File_Link------###############
+async def getdrivelink(search_command):
     process = await create_subprocess_exec(
-            *command,
-            stdout=asyncioPIPE,
-            stderr=asyncioPIPE,
-            )
-    pid = process.pid
-    running_process.append(pid)
-    check_data.append([pid, running_process])
-    task = create_task(check_task(check_data))
-    update_msg = create_task(update_rclone_message(process.stdout, userx, reply, datam, check_data, process_start_time))
-    done, pending = await asynciowait([task, process.wait()], return_when=FIRST_COMPLETED)
-    return_code = process.returncode
-    running_process.remove(pid)
-    await clear_tasks(task, pending, process, update_msg, False)
-    del check_data[-1]
-    checker = await process_checker(check_data)
-    if not checker:
-        all_data = []
-        msg_data = ['Processing']
-        return [True, True]
-    elif return_code == 0:
-        all_data = []
-        msg_data = ['Processing']
-        drive_link = await getdrivelink(search_command)
-        if drive_link[0]:
-            return [True, False, True, drive_link[1]]
-        else:
-            return [True, False, False, drive_link[1]]
-    else:
-        cc=f"{str(datam[0])}\n\n❌Rclone Upload Process Failed\n\n🔶Return Code: {str(return_code)}"
-        fail_file = f"{str(datam[0])}_Rclone Upload_log.txt"
-        with open(fail_file, 'w', encoding="utf-8") as f:
-                f.write(str(all_data))
-        await Client.send_file(user_id, file=fail_file, allow_cache=False, caption=cc)
-        all_data = []
-        msg_data = ['Processing']
-        await delete_trash(fail_file)
-        await reply.edit(cc)
-        return [False]
+        *search_command, stdout=asyncioPIPE
+    )
+    stdout, _ = await process.communicate()
+    try:
+        stdout = stdout.decode().strip()
+        print(stdout)
+        data = loads(stdout)
+        gid = data[0]["ID"]
+        # name = data[0]["Name"]
+        link = f'https://drive.google.com/file/d/{gid}/view'
+        print(link)
+        return [True, link]
+    except Exception as e:
+        return [False, e]
 
-    
 
-##############Run CMD##################
+#////////////////////////////////////Other_Functions////////////////////////////////////#
+
+###############------Run_Command------###############
 async def run_process_command(command):
     print(command)
     try:
