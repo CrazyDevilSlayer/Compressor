@@ -319,15 +319,18 @@ async def check_files_exists(files):
 def get_logs_msg(log_file):
     with open(log_file, 'r', encoding="utf-8") as f:
                 logFileLines = f.read().splitlines()
-                Loglines = ''
-                ind = 1
-                while len(Loglines) <= 3000:
-                    Loglines = logFileLines[-ind]+'\n'+Loglines
-                    if ind == len(logFileLines): break
-                    ind += 1
-                startLine = f"Generated Last {ind} Lines from {str(log_file)}: \n\n---------------- START LOG -----------------\n\n"
-                endLine = "\n---------------- END LOG -----------------"
-                return startLine+Loglines+endLine
+    Loglines = ''
+    ind = 1
+    if len(Loglines):
+        while len(Loglines) <= 3000:
+            Loglines = logFileLines[-ind]+'\n'+Loglines
+            if ind == len(logFileLines): break
+            ind += 1
+        startLine = f"Generated Last {ind} Lines from {str(log_file)}: \n\n---------------- START LOG -----------------\n\n"
+        endLine = "\n---------------- END LOG -----------------"
+        return startLine+Loglines+endLine
+    else:
+        return "Currently there is no error log"
 
 
 ###############------Clear_Trash_List------###############
