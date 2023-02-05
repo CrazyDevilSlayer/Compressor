@@ -391,7 +391,7 @@ async def _saverclone(event):
                 await delete_trash(r_config)
                 await new_event.reply("❌Invalid Config File Or Empty Config File.")
                 return
-            await saveoptions(userx, 'drive_name', accounts[0])
+            await saveoptions(userx, 'drive_name', accounts[0], SAVE_TO_DATABASE)
             await new_event.reply(f"✅Config Saved Successfully\n\n🔶Using {str(USER_DATA()[userx]['drive_name'])} Drive For Uploading.")
         return
 
