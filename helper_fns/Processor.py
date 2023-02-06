@@ -196,7 +196,7 @@ async def send_sample_video(tgclient, event, user_id, userx, duration, input_vid
     if USER_DATA()[userx]['gen_sample']:
             sample_name = f"{work_loc}/sample_{file_name}"
             vstart_time, vend_time = await get_cut_duration(duration)
-            cmd_sample = ["ffmpeg", "-ss", {str(vstart_time)}, "-to",  {str(vend_time)}, "-i", f"{input_video}","-c", "copy", '-y', f"{sample_name}"]
+            cmd_sample = ["ffmpeg", "-ss", str(vstart_time), "-to",  str(vend_time), "-i", f"{input_video}","-c", "copy", '-y', f"{sample_name}"]
             sample_result = await run_process_command(cmd_sample)
             if sample_result and exists(sample_name):
                 sscaption = f"🎞 Sample Video"
