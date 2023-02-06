@@ -10,7 +10,7 @@ To configure this bot add the environment variables stated below. Or add them in
 - `RESTART_NOTIFY_ID` - (Required)Numerical chat id of user , group or channel to notify on bot restart, set it False if you don't want notification on start.
 - `SAVE_TO_DATABASE` - (Required)Set value True if you want to use MongoDB Database else False.
 - `MONGODB_URI` - (Optional)MongoDB URL to save data, only required when SAVE_TO_DATABASE's value is True.
-- `CREDIT` - (Optional)Credit Name, only required when SAVE_TO_DATABASE's value is True.
+- `CREDIT` - (Optional)Credit Name, only required when SAVE_TO_DATABASE's value is True [changing this will also change your database].
 - `BOT_USERNAME` - (Optional)Bot Username without @, only required when SAVE_TO_DATABASE's value is True.
 - `Use_Session_String` - (Required)Set value True if you want to use Telegram user session string to upload 4GB file to telegram else False.
 - `Session_String` - (Optional)Telethon Session String, only required when Use_Session_String's value is True.
