@@ -185,11 +185,40 @@ async def start_process(tgclient, new_event, user_id, userx, check, queue_task, 
                             final_files = sresult
             datam = [file_name, '🔼Uploading Video', '𝚄𝚙𝚕𝚘𝚊𝚍𝚎𝚍', cancel_text, process_type, pindex]
             await upload_files(tgclient, user_id, userx, new_event, final_files, caption, reply, datam, check_data, thumbnail)
+            await send_sample_video(tgclient, new_event, user_id, userx, duration, final_files[-1], file_name, work_loc)
             await send_ss(tgclient, new_event, user_id, userx, duration, final_files[-1], file_name, work_loc)
             await clean_up(process_id, sub_process_id, trash_list)
             await reply.delete()
             return
-        
+
+###############------Send_Sample_Video------###############
+async def send_sample_video(tgclient, event, user_id, userx, duration, input_video, file_name, work_loc):
+    if USER_DATA()[userx]['gen_sample']:
+            sample_name = f"{work_loc}/sample_{file_name}"
+            vstart_time, vend_time = await get_cut_duration(duration)
+            cmd_sample = ["ffmpeg", "-ss", {str(vstart_time)}, "-to",  {str(vend_time)}, "-i", f"{input_video}","-c", "copy", '-y', f"{sample_name}"]
+            sample_result = await run_process_command(cmd_sample)
+            if sample_result and exists(sample_name):
+                sscaption = f"🎞 Sample Video"
+                try:
+                    await tgclient.send_file(user_id, file=sample_name, allow_cache=False, reply_to=event.message, caption=sscaption)
+                except:
+                    pass
+                remove(sample_name)
+    return
+
+
+###############------Get_Sample_Video_Cut_Duration------###############
+async def get_cut_duration(duration):
+    if duration<60:
+                return [1, duration-2]
+    else:
+        vmid = round(duration/2)-2
+        vend = vmid+60
+        if vend>duration:
+            vend = duration-2
+        return [vmid, vend]
+
 
 ###############------Select_Audio------###############
 async def select_audio(new_event, userx, input_file, caption):
@@ -461,7 +490,7 @@ async def send_ss(tgclient, event, user_id, userx, duration, input_video, file_n
                 remove(ss_name)
                 sn0+=1
                 await asynciosleep(1)
-        return
+    return
 
 
 #////////////////////////////////////AioHTTO////////////////////////////////////#

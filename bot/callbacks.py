@@ -172,6 +172,9 @@ async def callback(event):
             elif txt.startswith("generalssno"):
                 await saveoptions(userx, 'ss_no', int(new_position), SAVE_TO_DATABASE)
                 await event.answer(f"✅No Of Screenshoots - {str(new_position)}")
+            elif txt.startswith("generalgensample"):
+                await saveoptions(userx, 'gen_sample', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Generate Sample Video - {str(new_position)}")
             select_stream = USER_DATA()[userx]['select_stream']
             stream = USER_DATA()[userx]['stream']
             split_video = USER_DATA()[userx]['split_video']
@@ -184,6 +187,7 @@ async def callback(event):
             auto_drive = USER_DATA()[userx]['auto_drive']
             gen_ss = USER_DATA()[userx]['gen_ss']
             ss_no = USER_DATA()[userx]['ss_no']
+            gen_sample = USER_DATA()[userx]['gen_sample']
             # rclone = USER_DATA()[userx]['rclone']
             KeyBoard = []
             KeyBoard.append([Button.inline(f'🥝Auto Select Audio - {str(select_stream)}', 'nik66bots')])
@@ -218,6 +222,9 @@ async def callback(event):
                 KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'🎶No Of Screenshoots - {str(ss_no)}', 'nik66bots')])
             for board in gen_keyboard([3,5,7,10], ss_no, "generalssno", 4, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'🎞Generate Sample Video - {str(gen_sample)}', 'nik66bots')])
+            for board in gen_keyboard(bool_list, gen_sample, "generalgensample", 2, False):
                 KeyBoard.append(board)
             if check_config:
                 accounts = await get_config(r_config)

@@ -103,6 +103,7 @@ async def new_user(user_id, dbsave):
         User_Data[user_id]['show_time'] = True
         User_Data[user_id]['gen_ss'] = True
         User_Data[user_id]['ss_no'] = 5
+        User_Data[user_id]['gen_sample'] = False
         if dbsave:
             data = await db.add_datam(str(User_Data), CREDIT, "User_Data")
         else:
