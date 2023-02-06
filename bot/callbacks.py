@@ -77,6 +77,7 @@ async def callback(event):
             [Button.inline('#️⃣ General', 'general_settings')],
             [Button.inline('📝 Progress Bar', 'progress_settings')],
             [Button.inline('🏮 Compression', 'compression_settings')],
+            [Button.inline('🍧 Merge', 'merge_settings')],
             [Button.inline('⭕Close Settings', 'close_settings')]
         ])
             return
@@ -308,19 +309,19 @@ async def callback(event):
             KeyBoard = []
             if txt.startswith("compressionencoder"):
                 await saveconfig(userx, 'compress', 'encoder', new_position, SAVE_TO_DATABASE)
-                await event.answer(f"✅Encoder - {str(new_position)}")
+                await event.answer(f"✅Compress Encoder - {str(new_position)}")
             elif txt.startswith("compressionpreset"):
                 await saveconfig(userx, 'compress', 'preset', new_position, SAVE_TO_DATABASE)
-                await event.answer(f"✅Preset - {str(new_position)}")
+                await event.answer(f"✅Compress Preset - {str(new_position)}")
             elif txt.startswith("compressioncopysub"):
                 await saveconfig(userx, 'compress', 'copy_sub', eval(new_position), SAVE_TO_DATABASE)
-                await event.answer(f"✅Copy Subtitles - {str(new_position)}")
+                await event.answer(f"✅Compress Copy Subtitles - {str(new_position)}")
             elif txt.startswith("compressionmap"):
                 await saveconfig(userx, 'compress', 'map', eval(new_position), SAVE_TO_DATABASE)
-                await event.answer(f"✅Map - {str(new_position)}")
+                await event.answer(f"✅Compress Map - {str(new_position)}")
             elif txt.startswith("compressioncrf"):
                 await saveconfig(userx, 'compress', 'crf', new_position, SAVE_TO_DATABASE)
-                await event.answer(f"✅CRF - {str(new_position)}")
+                await event.answer(f"✅Compress CRF - {str(new_position)}")
             compress_encoder = USER_DATA()[userx]['compress']['encoder']
             compress_preset = USER_DATA()[userx]['compress']['preset']
             compress_crf = USER_DATA()[userx]['compress']['crf']
@@ -343,6 +344,20 @@ async def callback(event):
                 KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'↩Back', 'settings')])
             await event.edit("⚙ Compression Settings", buttons=KeyBoard)
+            return
+
+        elif txt.startswith("merge"):
+            new_position = txt.split("_", 1)[1]
+            KeyBoard = []
+            if txt.startswith("mergemap"):
+                await saveconfig(userx, 'merge', 'map', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Merge Map - {str(new_position)}")
+            merge_map = USER_DATA()[userx]['merge']['map']
+            KeyBoard.append([Button.inline(f'🍓Map  - {str(merge_map)}', 'nik66bots')])
+            for board in gen_keyboard(bool_list, merge_map, "mergemap", 2, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'↩Back', 'settings')])
+            await event.edit("⚙ Merge Settings", buttons=KeyBoard)
             return
         
         elif txt=="nik66bots":

@@ -25,7 +25,7 @@ punc = ['!', '|', '{', '}', ';', ':', "'", '=', '"', '\\', ',', '<', '>', '/', '
 
 
 #////////////////////////////////////Functions////////////////////////////////////#
-async def add_queue(process, userx, new_event, url_download, file_loc, file_name, ext, thumbnail):
+async def add_queue(process, userx, new_event, url_download, file_loc, file_name, ext, thumbnail, *merge_list):
     queue_data = {}
     queue_data['event'] = new_event
     queue_data['url_download'] = url_download
@@ -34,6 +34,8 @@ async def add_queue(process, userx, new_event, url_download, file_loc, file_name
     queue_data['file_name'] = file_name
     queue_data['ext'] = ext
     queue_data['thumbnail'] = thumbnail
+    if process=="merge":
+        queue_data['merge_list'] = merge_list[0]
     get_queue()[userx]['tasks'].append(queue_data)
     return
 
@@ -101,7 +103,7 @@ async def clean_up(process_id, sub_process_id, trash_list):
 #////////////////////////////////////Processor////////////////////////////////////#
 
 ###############------Start_Processing------###############
-async def start_process(tgclient, new_event, user_id, userx, check, queue_task, url_download, ext, process_type, queue_data, pindex, process_id, check_data, trash_list):
+async def start_process(tgclient, new_event, user_id, userx, check, queue_task, url_download, ext, process_type, queue_data, pindex, process_id, check_data, trash_list, *merge_list):
             if not process_id:
                 process_id = gen_random_string(10)
                 sub_process_id = False
@@ -121,18 +123,17 @@ async def start_process(tgclient, new_event, user_id, userx, check, queue_task, 
                 else:
                     thumbnail = './thumb.jpg'
                 if queue_task:
-                            await add_queue(process_type, userx, new_event, url_download, file_loc, file_name, ext, thumbnail)
+                            await add_queue(process_type, userx, new_event, url_download, file_loc, file_name, ext, thumbnail, *merge_list)
                             await new_event.reply("✅Task Added To Queue.")
                             return
+                if process_type=="merge":
+                    merge_list = merge_list[0]
+                    dw_files = len(merge_list)
+                else:
+                    merge_list = []
+                    dw_files = 1
             else:
-                file_loc = queue_data[' file_loc']
-                file_name = queue_data['file_name']
-                ext = queue_data['ext']
-                thumbnail = queue_data['thumbnail']
-                url_download = queue_data['url_download']
-                new_event = queue_data['event']
-                process_type = queue_data['process']
-                trash_list.append(file_loc)
+                file_loc, file_name, ext, thumbnail, url_download, new_event, process_type, merge_list, dw_files = await get_queue_data(queue_data)
                 if thumbnail!='./thumb.jpg':
                         trash_list.append(thumbnail)
             if not sub_process_id:
@@ -143,32 +144,66 @@ async def start_process(tgclient, new_event, user_id, userx, check, queue_task, 
                 append_sub_process(sub_process_id)
                 check_data.append([sub_process_id, get_sub_process()])
                 cancel_text = f"🟡Skip File: `/cancel sp {str(sub_process_id)}`\n🔴Cancel Task: `/cancel mp {str(process_id)}`"
-            reply = await new_event.reply("🔽Starting Download")
-            datam = [file_name, "🔽Downloading", "𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍", cancel_text, process_type, pindex]
-            if not url_download:
-                dresult = await download_tg_file(tgclient, new_event, file_loc, reply, datam, check_data, userx)
+            infile_names = ''
+            reply = False
+            for i in range(dw_files):
+                    if process_type=="merge":
+                            url_download = merge_list[i][0]
+                            dw_event = merge_list[i][1]
+                            dwfile_loc, dwfile_name, dwext = merge_list[i][2]
+                    else:
+                            dw_event = new_event
+                            dwfile_loc, dwfile_name, dwext = file_loc, file_name, ext
+                    trash_list.append(dwfile_loc)
+                    if reply:
+                        await reply.delete()
+                        await asynciosleep(4)
+                    reply = await dw_event.reply("🔽Starting Download")
+                    datam = [dwfile_name, f"🔽Downloading [{str(i+1)}/{str(dw_files)}]", "𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍", cancel_text, process_type, pindex]
+                    if not url_download:
+                        dresult = await download_tg_file(tgclient, dw_event, dwfile_loc, reply, datam, check_data, userx)
+                    else:
+                        async with ClientSession() as session:
+                            dresult = await download_coroutine(session, url_download, userx, dwfile_loc, reply, check_data, datam, 3)
+                    if not dresult:
+                        await clean_up(process_id, sub_process_id, trash_list)
+                        return
+                    infile_names += f"file '{str(dwfile_loc)}'\n"
+            if process_type=="merge":
+                    duration = 0
+                    await reply.delete()
+                    await asynciosleep(2)
+                    reply = await new_event.reply("⚙ Processing")
             else:
-                async with ClientSession() as session:
-                    dresult = await download_coroutine(session, url_download, userx, file_loc, reply, check_data, datam, 3)
-            if not dresult:
-                await clean_up(process_id, sub_process_id, trash_list)
-                return
+                    duration = get_video_duration(file_loc)
             work_loc = await make_direc(f'{str(userx)}_work')
             progress = f"{work_loc}/progress_{file_name}.txt"
-            caption = ""
-            amap_options, caption = await select_audio(new_event, userx, file_loc, caption)
-            file_loc, file_name, ext, caption = await change_metadata(new_event, userx, file_loc, file_name, ext, caption)
-            if file_loc not in trash_list:
-                trash_list.append(file_loc)
+            caption = f"⚡{str(process_type).upper()}⚡\n\n"
+            if process_type!="merge":
+                    amap_options, caption = await select_audio(new_event, userx, file_loc, caption)
+                    file_loc, file_name, ext, caption = await change_metadata(new_event, userx, file_loc, file_name, ext, caption)
+                    if file_loc not in trash_list:
+                        trash_list.append(file_loc)
             output_file = f"{work_loc}/{file_name}"
             trash_list.append(output_file)
-            duration = get_video_duration(file_loc)
             datam = [file_name, get_time(), cancel_text, process_type, pindex]
             if process_type=="compress":
                 result = await Processor.compress(tgclient, reply, user_id, userx, file_loc, progress, amap_options, output_file, duration, check_data, datam)
+            if process_type=="merge":
+                concat_file = f"{str(file_name)}_{str(userx)}_merge_concat.txt"
+                trash_list.append(concat_file)
+                with open(concat_file, 'w', encoding="utf-8") as f:
+                        f.write(str(infile_names.strip()))
+                result = await Processor.merge(tgclient, reply, user_id, userx, concat_file, progress, output_file, duration, check_data, datam, dw_files)
             if not result:
                 await clean_up(process_id, sub_process_id, trash_list)
                 return
+            if process_type=="merge":
+                    amap_options, caption = await select_audio(new_event, userx, output_file, caption)
+                    output_file, file_name, ext, caption = await change_metadata(new_event, userx, output_file, file_name, ext, caption)
+                    if output_file not in trash_list:
+                        trash_list.append(output_file)
+            duration = get_video_duration(output_file)
             final_files = [output_file]
             if getsize(output_file)>2097151000:
                 if USER_DATA()[userx]['split_video']:
@@ -190,6 +225,24 @@ async def start_process(tgclient, new_event, user_id, userx, check, queue_task, 
             await clean_up(process_id, sub_process_id, trash_list)
             await reply.delete()
             return
+        
+###############------Get_Queue_Data------###############
+async def get_queue_data(queue_data):
+    file_loc = queue_data[' file_loc']
+    file_name = queue_data['file_name']
+    ext = queue_data['ext']
+    thumbnail = queue_data['thumbnail']
+    url_download = queue_data['url_download']
+    new_event = queue_data['event']
+    process_type = queue_data['process']
+    if process_type=="merge":
+        merge_list = queue_data["merge_list"]
+        dw_files = len(merge_list)
+    else:
+        merge_list = False
+        dw_files = 1
+    return [file_loc, file_name, ext, thumbnail, url_download, new_event, process_type, merge_list, dw_files]
+
 
 ###############------Send_Sample_Video------###############
 async def send_sample_video(tgclient, event, user_id, userx, duration, input_video, file_name, work_loc):
@@ -206,6 +259,7 @@ async def send_sample_video(tgclient, event, user_id, userx, duration, input_vid
                     pass
                 remove(sample_name)
     return
+
 
 
 ###############------Get_Sample_Video_Cut_Duration------###############

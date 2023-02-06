@@ -7,7 +7,7 @@ from asyncio import sleep as asynciosleep
 from os import execl
 from sys import argv, executable
 from helper_fns.Queue import get_queue
-from helper_fns.Processor import start_process
+from helper_fns.Processor import start_process, get_filename
 
 
 
@@ -85,11 +85,14 @@ async def ask_media(event, user_id, userx, detailed_message, keywords, message, 
                 return new_event
             elif new_event.message.message:
                 if str(new_event.message.message)=='stop':
-                    await ask.reply('✅Task Stopped')
-                    return "cancelled"
+                    # await ask.reply('✅Task Stopped')
+                    return "stopped"
                 elif str(new_event.message.message)=='pass':
                     await ask.reply('✅Task Passed')
                     return "passed"
+                elif str(new_event.message.message)=='cancel':
+                    await ask.reply('✅Task Passed')
+                    return "cancelled"
                 elif str(new_event.message.message).startswith("http"):
                     return new_event
                 else:
@@ -167,6 +170,7 @@ async def _settings(event):
         [Button.inline('#️⃣ General', 'general_settings')],
         [Button.inline('📝 Progress Bar', 'progress_settings')],
         [Button.inline('🏮 Compression', 'compression_settings')],
+        [Button.inline('🍧 Merge', 'merge_settings')],
         [Button.inline('⭕Close Settings', 'close_settings')]
     ])
         return
@@ -192,6 +196,47 @@ async def _compress(event):
                 await asynciosleep(1)
                 await event.reply("✅Task Completed Successfully")
             return
+
+
+
+###############------Merge------###############
+@Client.on(events.NewMessage(incoming=True, pattern='/merge'))
+async def _merge(event):
+    user_id = event.message.chat.id
+    userx = event.message.sender.id
+    validate = await init_user(event, userx)
+    if not validate:
+        return
+    ext = False
+    queue_task = get_queue()[userx]['started']
+    merge_list =  []
+    t_no = 1
+    cancelled = False
+    while True:
+            new_event = await ask_media(event, user_id, userx, get_details("merge", userx, True), ["/merge", "stop", "cancel"], f"Send Video or URL No. {str(t_no)}", 120, "video/", queue_task)
+            if new_event and new_event not in ["passed", "cancelled", "stopped"]:
+                    url = await get_url_from_message(new_event)
+                    merge_task = await get_filename(Client, new_event, user_id, userx, gen_random_string(10), ext, get_details("merge", userx, True), 120, 'dw', False, url)
+                    if merge_task:
+                        merge_list.append([url, new_event, merge_task])
+                        t_no+=1
+            elif new_event=="cancelled":
+                cancelled = True
+                break
+            else:
+                break
+    if cancelled:
+        return
+    if len(merge_list)<2:
+        await event.reply("❗Merge Requires Atleast 2 Videos")
+        return
+    trash_list = []
+    await start_process(Client, event, user_id, userx, True, queue_task, False, False, 'merge', False, "1/1", False, False, trash_list, *(merge_list,))
+    await clear_trash_list(trash_list)
+    if not queue_task:
+        await asynciosleep(1)
+        await event.reply("✅Task Completed Successfully")
+    return
 
 
 ###############------Start/Process_Queue------###############
@@ -307,7 +352,7 @@ async def _clearonequeue(event):
             q = 1
             msg = f"🔶Queued Tasks : {str(total_queue)}\n\n*️⃣ Send Task Index\n"
             for queue_data in get_queue()[userx]['tasks']:
-                msg+= f"`{str(q)}` - {str(queue_data['file_name'])}\n"
+                msg+= f"`{str(q)}` - {str(queue_data['file_name'])} [{str(queue_data['process'])}]\n"
                 q+=1
             async with Client.conversation(user_id) as conv:
                 handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: int(e.message.message)), timeout=60)
@@ -324,7 +369,7 @@ async def _clearonequeue(event):
                     q = 1
                     msg = ''
                     for queue_data in get_queue()[userx]['tasks']:
-                        msg+= f"`{str(q)}` - {str(queue_data['file_name'])}\n"
+                        msg+= f"`{str(q)}` - {str(queue_data['file_name'])} [{str(queue_data['process'])}]\n"
                         q+=1
                     await new_event.reply(f"✅Successfully Cleared Task\n\n🔶Queued Tasks : {str(len(get_queue()[userx]['tasks']))}\n\n{str(msg)}")
                 except Exception as e:
@@ -358,7 +403,7 @@ async def _getqueue(event):
             q = 1
             msg = f"🔶Queued Tasks : {str(total_queue)}\n\n"
             for queue_data in get_queue()[userx]['tasks']:
-                msg+= f"`{str(q)}` - {str(queue_data['file_name'])}\n"
+                msg+= f"`{str(q)}` - {str(queue_data['file_name'])} [{str(queue_data['process'])}]\n"
                 q+=1
             await event.reply(msg)
             return

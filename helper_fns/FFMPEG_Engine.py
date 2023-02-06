@@ -217,7 +217,7 @@ async def update_message(reply, userx, input_file, output_file, process_log, dur
                         await assleep(USER_DATA()[userx]['update_time'])
             else:
                 try:
-                    await reply.edit(f"{str(datam[4])}\n🎟️File: {datam[0]}")
+                    await reply.edit(f"{str(datam[5])}\n🎟️File: {datam[0]}\n🛠Task: {str(datam[4])}")
                 except Exception as e:
                     print(e)
             return

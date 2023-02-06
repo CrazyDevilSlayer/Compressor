@@ -452,5 +452,14 @@ def get_details(pmode, userx, head):
             else:
                 text = f'🍫Mode: Compression\n{text}'
             return text
+        
+        elif pmode=="merge":
+            merge_map = USER_DATA()[userx]['merge']['map']
+            text =f'🍓Map: {merge_map}'
+            if head:
+                text = f'Merge Settings:\n{text}'
+            else:
+                text = f'🍫Mode: Merge\n{text}'
+            return text
     else:
         return False

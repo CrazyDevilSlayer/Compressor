@@ -95,3 +95,25 @@ class Processor:
             print(e)
             LOGGER.info(str(e))
             return False
+
+    ###############------Merge------###############
+    async def merge(Client, reply, user_id, userx, input_file, progress, output_file, duration, check_data, datam, total_video):
+        merge_map = USER_DATA()[userx]['merge']['map']
+        command = ["ffmpeg",
+                                    "-f",
+                                    "concat",
+                                    "-safe",
+                                    "0",
+                                    "-i", f'{str(input_file)}']
+        if merge_map:
+            command+=['-map','0']
+        command+= ["-c", "copy", '-y', f'{str(output_file)}']
+        datam.append(f'🍧Merging {str(total_video)} Videos')
+        result = await ffmpeg_engine(Client, user_id, userx, reply, command, input_file, output_file, progress, duration, check_data, datam, False)
+        if result[0]:
+            if result[1]:
+                await reply.edit("🔒Task Cancelled By User")
+                return False
+            return True
+        else:
+            return False
