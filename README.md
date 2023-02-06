@@ -18,6 +18,7 @@ To configure this bot add the environment variables stated below. Or add them in
 ### Commands
 ```
 compress - Compress Video
+merge - Merge Video
 queue - To Start/Process Queue
 clearqueue - Clear All Queued Tasks
 terminatequeue - Terminate Queued Tasks
