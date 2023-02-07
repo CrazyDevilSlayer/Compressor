@@ -8,3 +8,4 @@ test.py
 userdata/
 test1.py
 config.env
+rclone.conf

@@ -353,9 +353,9 @@ async def getdrivelink(search_command):
         data = loads(stdout)
         gid = data[0]["ID"]
         # name = data[0]["Name"]
-        link = f'https://drive.google.com/file/d/{gid}/view'
-        print(link)
-        return [True, link]
+        # link = f'https://drive.google.com/file/d/{gid}/view'
+        # print(link)
+        return [True, gid]
     except Exception as e:
         return [False, e]
 

@@ -1,7 +1,7 @@
 from config import Config
 from telethon import events
 from time import time
-from helper_fns.Helper import get_readable_time, USER_DATA, get_video_duration, get_details, Timer, make_direc, clear_trash_list, process_checker, get_time, execute, delete_trash, get_human_size, gen_random_string
+from helper_fns.Helper import get_readable_time, USER_DATA, get_video_duration, get_details, Timer, make_direc, clear_trash_list, process_checker, get_time, execute, delete_trash, get_human_size, gen_random_string, get_account_type
 from helper_fns.Ruunung_Process import append_master_process, remove_master_process, get_master_process, append_sub_process, remove_sub_process, get_sub_process
 from helper_fns.Progress_Bar import progress_bar
 from helper_fns.Video_Engine import Processor
@@ -641,7 +641,12 @@ async def upload_drive(tgclient, event, user_id, reply, caption, userx, r_config
                                                                         fisize =str(get_human_size(getsize(output_vid)))
                                                                 except:
                                                                         fisize = "Unknown"
-                                                                text = f"✅{file_name} Successfully Uploade To Drive\n\n⛓Link: `{upload[3]}`\n\n💽Size: {fisize}\n\n{caption}"
+                                                                account_type = await get_account_type(r_config, drive_name)
+                                                                if account_type=="drive":
+                                                                    link_text = f"⛓Link: `https://drive.google.com/file/d/{upload[3]}/view`"
+                                                                else:
+                                                                    link_text = f"⛓File ID: `{upload[3]}`"
+                                                                text = f"✅{file_name} Successfully Uploade To Drive\n\n{link_text}\n\n💽Size: {fisize}\n\n{caption}"
                                                         else:
                                                                 text = f"✅{file_name} Successfully Uploade To Drive\n\n❗Failed To Get Link: `{str(upload[3])}`\n\n{caption}"
                                                         await event.reply(text)

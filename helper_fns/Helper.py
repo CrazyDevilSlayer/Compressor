@@ -416,6 +416,19 @@ async def get_config(file):
         return False
 
 
+###############------Get_Rclone_Account_Type------###############
+async def get_account_type(file, drive_name):
+    try:
+        config = ConfigParser(default_section=False)
+        config.read(file, encoding="utf-8")
+        if drive_name in config:
+            if "type" in config[drive_name]:
+                return str(config[drive_name].get('type')).strip()
+        return False
+    except Exception as e:
+        print(e)
+        return False
+
 ###############------Generate_Random_String------###############
 def gen_random_string(k):
     return str(''.join(choices(ascii_lowercase + digits, k=k)))
