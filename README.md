@@ -32,8 +32,8 @@ delsudo - Delete Sudo User
 getsudo - Get Sudo Users List
 log - Get Log Message
 logs - Get Log File
-resetdb - Reset Database
 renew - Renew Storage
+resetdb - Reset Database
 time - Get Bot Uptime
 settings - Settings Section
 restart - Restart Bot
