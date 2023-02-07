@@ -419,13 +419,12 @@ async def get_filename(tgclient, event, user_id, userx, process_id, ext, detaile
                     filename = event.message.file.name
             else:
                     filename = process_id
-                    
-    if filename and not ext:
-        if "." in filename:
-                try:
-                    ext = await get_extention_from_filename(filename)
-                except:
-                    pass
+        if filename and not ext:
+            if "." in filename:
+                    try:
+                        ext = await get_extention_from_filename(filename)
+                    except:
+                        pass
     else:
         async with tgclient.conversation(user_id) as conv:
             handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: e.message.message), timeout=timeout)

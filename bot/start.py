@@ -93,11 +93,8 @@ async def ask_media(event, user_id, userx, detailed_message, keywords, message, 
                 if str(new_event.message.message)=='stop':
                     # await ask.reply('✅Task Stopped')
                     return "stopped"
-                elif str(new_event.message.message)=='pass':
-                    await ask.reply('✅Task Passed')
-                    return "passed"
                 elif str(new_event.message.message)=='cancel':
-                    await ask.reply('✅Task Passed')
+                    await ask.reply('✅Task Passed/Cancelled')
                     return "cancelled"
                 elif str(new_event.message.message).startswith("http"):
                     return new_event
@@ -116,7 +113,7 @@ async def ask_watermark(event, user_id, userx, cmd, wt_check):
     else:
             text = f"Watermark Not Present\n\n🔶Send Me Watermark Image To Save."
     new_event = await ask_media(event, user_id, userx, get_details("watermark", userx, True), [f"/{cmd}", "stop"], text, 120, "image/", False)
-    if new_event and new_event not in ["cancelled"]:
+    if new_event and new_event not in ["cancelled", "stopped"]:
         await Client.download_media(new_event.message, watermark_path)
         if exists(watermark_path):
             return True
@@ -218,7 +215,7 @@ async def _compress(event):
     ext = await get_ext(event)
     queue_task = get_queue()[userx]['started']
     new_event = await ask_media(event, user_id, userx, get_details("compress", userx, True), ["/compress", "stop"], "Send Video or URL", 120, "video/", queue_task)
-    if new_event and new_event not in ["cancelled"]:
+    if new_event and new_event not in ["cancelled", "stopped"]:
             url = await get_url_from_message(new_event)
             trash_list = []
             await start_process(Client, new_event, user_id, userx, False, queue_task, url, ext, 'compress', False, "1/1", False, False, trash_list)
@@ -245,7 +242,7 @@ async def _merge(event):
     cancelled = False
     while True:
             new_event = await ask_media(event, user_id, userx, get_details("merge", userx, True), ["/merge", "stop", "cancel"], f"Send Video or URL No. {str(t_no)}", 120, "video/", queue_task)
-            if new_event and new_event not in ["passed", "cancelled", "stopped"]:
+            if new_event and new_event not in ["cancelled", "stopped"]:
                     url = await get_url_from_message(new_event)
                     merge_task = await get_filename(Client, new_event, user_id, userx, gen_random_string(10), ext, get_details("merge", userx, True), 120, 'dw', False, url)
                     if merge_task:
@@ -286,7 +283,7 @@ async def _watermark(event):
     ext = await get_ext(event)
     queue_task = get_queue()[userx]['started']
     new_event = await ask_media(event, user_id, userx, get_details(pcmd, userx, True), [f"/{pcmd}", "stop"], "Send Video or URL", 120, "video/", queue_task)
-    if new_event and new_event not in ["cancelled"]:
+    if new_event and new_event not in ["cancelled" , "stopped"]:
             url = await get_url_from_message(new_event)
             trash_list = []
             await start_process(Client, new_event, user_id, userx, False, queue_task, url, ext, pcmd, False, "1/1", False, False, trash_list)
@@ -487,7 +484,7 @@ async def _saverclone(event):
         else:
                 text = f"Rclone Config Not Present\n\nSend Me Config To Save."
         new_event = await ask_media(event, user_id, userx, False, ["/saveconfig", "stop"], text, 60, "text/", False)
-        if new_event and new_event not in ["cancelled"]:
+        if new_event and new_event not in ["cancelled", "stopped"]:
             await Client.download_media(new_event.message, r_config)
             accounts = await get_config(r_config)
             if not accounts:

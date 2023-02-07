@@ -29,7 +29,7 @@ async def download_tg_file(Client, new_event, download_location, reply, datam, c
                         progress_callback=lambda x,y: progress_bar(x,y,reply,start_time,datam, userx, timer))
         except Exception as e:
                 if str(e)=="Cancelled":
-                        await reply.edit("✅Task Cancelled")
+                        await reply.edit("🔒Task Cancelled By User")
                 else:
                     await reply.edit(str(e))
                     LOGGER.info(str(e))
