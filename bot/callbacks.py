@@ -1,7 +1,7 @@
 from telethon import events
 from telethon.tl.custom import Button
 from config import Config
-from helper_fns.Helper import USER_DATA, saveconfig, delete_all, delete_trash,saveoptions, get_config, resetdatabase
+from helper_fns.Helper import USER_DATA, saveconfig, delete_all, delete_trash,saveoptions, get_config, resetdatabase, new_user
 from os import listdir
 from os.path import isfile, exists
 
@@ -78,6 +78,8 @@ async def callback(event):
         txt = event.data.decode()
         user_id = event.chat.id
         userx = event.sender.id
+        if userx not in USER_DATA():
+            await new_user(userx, SAVE_TO_DATABASE)
         
         if txt.startswith("settings"):
             text = f"⚙ Hi {get_mention(event)} Choose Your Settings"
