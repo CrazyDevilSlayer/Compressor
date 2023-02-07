@@ -1,7 +1,7 @@
 from telethon import events
 from telethon.tl.custom import Button
 from config import Config
-from helper_fns.Helper import USER_DATA, saveconfig, delete_all, delete_trash,saveoptions, get_config
+from helper_fns.Helper import USER_DATA, saveconfig, delete_all, delete_trash,saveoptions, get_config, resetdatabase
 from os import listdir
 from os.path import isfile, exists
 
@@ -12,9 +12,11 @@ from os.path import isfile, exists
 sudo_users = Config.SUDO_USERS
 encoders_list = ['libx265', 'libx264']
 crf_list = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51']
+wsize_list =['8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25']
 presets_list =  ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 bool_list = [True, False]
-wpositions = {'5:5': 'Top Left', 'main_w-overlay_w-5:5': 'Top Right', '5:main_h-overlay_h': 'Bottom Left', 'main_w-overlay_w-5:main_h-overlay_h-5': 'Bottom Right'}
+ws_name = {'5:5': 'Top Left', 'main_w-overlay_w-5:5': 'Top Right', '5:main_h-overlay_h': 'Bottom Left', 'main_w-overlay_w-5:main_h-overlay_h-5': 'Bottom Right'}
+ws_value = {'Top Left': '5:5', 'Top Right': 'main_w-overlay_w-5:5', 'Bottom Left': '5:main_h-overlay_h', 'Bottom Right': 'main_w-overlay_w-5:main_h-overlay_h-5'}
 Client = Config.client
 punc = ['!', '|', '{', '}', ';', ':', "'", '=', '"', '\\', ',', '<', '>', '/', '?', '@', '#', '$', '%', '^', '&', '*', '~', "  ", "\t", "+", "b'", "'"]
 SAVE_TO_DATABASE = Config.SAVE_TO_DATABASE
@@ -36,10 +38,16 @@ def gen_keyboard(values_list, current_value, callvalue, items, hide):
             current_list = []
         value = f"{str(callvalue)}_{str(x)}"
         if current_value!=x:
-            text = f"{str(x)}"
+            if callvalue!="watermarkposition":
+                text = f"{str(x)}"
+            else:
+                    text = f"{str(ws_name[x])}"
         else:
             if not hide:
-                text = f"{str(x)} 🟢"
+                if callvalue!="watermarkposition":
+                    text = f"{str(x)} 🟢"
+                else:
+                    text = f"{str(ws_name[x])} 🟢"
             else:
                 text = f"🟢"
         keyboard = Button.inline(text, value)
@@ -78,6 +86,7 @@ async def callback(event):
             [Button.inline('📝 Progress Bar', 'progress_settings')],
             [Button.inline('🏮 Compression', 'compression_settings')],
             [Button.inline('🍧 Merge', 'merge_settings')],
+            [Button.inline('🛺 Watermark', 'watermark_settings')],
             [Button.inline('⭕Close Settings', 'close_settings')]
         ])
             return
@@ -85,6 +94,20 @@ async def callback(event):
         elif txt=="close_settings":
             await event.delete()
             return
+        
+        elif txt.startswith("resetdb"):
+            new_position = eval(txt.split("_", 1)[1])
+            if new_position:
+                reset = await resetdatabase(SAVE_TO_DATABASE)
+                if reset:
+                    text = f"✔Database Reset Successfull"
+                else:
+                    text = f"❌Database Reset Failed"
+                await event.answer(text, alert=True)
+            else:
+                await event.answer(f"Why You Wasting My Time.", alert=True)
+            return
+        
         
         elif txt.startswith("renew"):
             new_position = eval(txt.split("_", 1)[1])
@@ -113,7 +136,7 @@ async def callback(event):
                     await event.answer(f"Nothing to clear 🙄", alert=True)
                     return
             else:
-                await event.answer(f"Ok Dont Waste My Time😂", alert=True)
+                await event.answer(f"Why You Wasting My Time.", alert=True)
                 return
         
         elif txt.startswith("general"):
@@ -358,6 +381,69 @@ async def callback(event):
                 KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'↩Back', 'settings')])
             await event.edit("⚙ Merge Settings", buttons=KeyBoard)
+            return
+        
+        elif txt.startswith("watermark"):
+            new_position = txt.split("_", 1)[1]
+            KeyBoard = []
+            if txt.startswith("watermarkencoder"):
+                await saveconfig(userx, 'watermark', 'encoder', new_position, SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Encoder - {str(new_position)}")
+            elif txt.startswith("watermarkencode"):
+                await saveconfig(userx, 'watermark', 'encode', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Use Encoder - {str(new_position)}")
+            elif txt.startswith("watermarkposition"):
+                await saveconfig(userx, 'watermark', 'position', new_position, SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Position - {str(ws_name[new_position])}")
+            elif txt.startswith("watermarksize"):
+                await saveconfig(userx, 'watermark', 'size', new_position, SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Size - {str(new_position)}")
+            elif txt.startswith("watermarkpreset"):
+                await saveconfig(userx, 'watermark', 'preset', new_position, SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Preset - {str(new_position)}")
+            elif txt.startswith("watermarkcopysub"):
+                await saveconfig(userx, 'watermark', 'copy_sub', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Copy Subtitles - {str(new_position)}")
+            elif txt.startswith("watermarkmap"):
+                await saveconfig(userx, 'watermark', 'map', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Map - {str(new_position)}")
+            elif txt.startswith("watermarkcrf"):
+                await saveconfig(userx, 'watermark', 'crf', new_position, SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark CRF - {str(new_position)}")
+            watermark_position = USER_DATA()[userx]['watermark']['position']
+            watermark_size = USER_DATA()[userx]['watermark']['size']
+            watermark_encoder = USER_DATA()[userx]['watermark']['encoder']
+            watermark_encode = USER_DATA()[userx]['watermark']['encode']
+            watermark_preset = USER_DATA()[userx]['watermark']['preset']
+            watermark_crf = USER_DATA()[userx]['watermark']['crf']
+            watermark_map = USER_DATA()[userx]['watermark']['map']
+            watermark_copysub = USER_DATA()[userx]['watermark']['copy_sub']
+            KeyBoard.append([Button.inline(f'🥽Position - {str(ws_name[watermark_position])}', 'nik66bots')])
+            for board in gen_keyboard(list(ws_name.keys()), watermark_position, "watermarkposition", 2, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'🛸Size - {str(watermark_size)}', 'nik66bots')])
+            for board in gen_keyboard(wsize_list, watermark_size, "watermarksize", 6, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'🎧Use Encoder - {str(watermark_encode)}', 'nik66bots')])
+            for board in gen_keyboard(bool_list, watermark_encode, "watermarkencode", 2, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'🍬Encoder - {str(watermark_encoder)}', 'nik66bots')])
+            for board in gen_keyboard(encoders_list, watermark_encoder, "watermarkencoder", 2, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'🍄Copy Subtitles - {str(watermark_copysub)}', 'nik66bots')])
+            for board in gen_keyboard(bool_list, watermark_copysub, "watermarkcopysub", 2, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'🍓Map  - {str(watermark_map)}', 'nik66bots')])
+            for board in gen_keyboard(bool_list, watermark_map, "watermarkmap", 2, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'♒Preset - {str(watermark_preset)}', 'nik66bots')])
+            for board in gen_keyboard(presets_list, watermark_preset, "watermarkpreset", 3, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'⚡CRF  - {str(watermark_crf)}', 'nik66bots')])
+            for board in gen_keyboard(crf_list, watermark_crf, "watermarkcrf", 6, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'↩Back', 'settings')])
+            await event.edit("⚙ Watermark Settings", buttons=KeyBoard)
             return
         
         elif txt=="nik66bots":

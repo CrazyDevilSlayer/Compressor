@@ -41,14 +41,14 @@ async def new_user(user_id, dbsave):
         User_Data[user_id] = {}
         User_Data[user_id]['watermark'] = {}
         User_Data[user_id]['watermark']['position'] = '5:5'
-        User_Data[user_id]['watermark']['size'] = '7'
+        User_Data[user_id]['watermark']['size'] = '15'
         User_Data[user_id]['watermark']['crf'] = '23'
         User_Data[user_id]['watermark']['use_crf'] = False
         User_Data[user_id]['watermark']['encode'] = True
         User_Data[user_id]['watermark']['encoder'] = 'libx265'
         User_Data[user_id]['watermark']['preset'] = 'ultrafast'
         User_Data[user_id]['watermark']['map_audio'] = True
-        User_Data[user_id]['watermark']['map_sub'] = True
+        User_Data[user_id]['watermark']['copy_sub'] = True
         User_Data[user_id]['watermark']['map'] = True
         User_Data[user_id]['muxer'] = {}
         User_Data[user_id]['muxer']['preset'] = 'ultrafast'
@@ -124,6 +124,18 @@ async def saveoptions(user_id, dname, value, dbsave):
         else:
             data = True
         return data
+    except Exception as e:
+        print(e)
+        return False
+
+###############------Reset_Database------###############
+async def resetdatabase(dbsave):
+    global User_Data
+    try:
+        User_Data = {}
+        if dbsave:
+            await db.add_datam(str(User_Data), CREDIT, "User_Data")
+        return True
     except Exception as e:
         print(e)
         return False
@@ -460,6 +472,32 @@ def get_details(pmode, userx, head):
                 text = f'Merge Settings:\n{text}'
             else:
                 text = f'🍫Mode: Merge\n{text}'
+            return text
+        
+        elif pmode=="watermark":
+            watermark_position = USER_DATA()[userx]['watermark']['position']
+            watermark_size = USER_DATA()[userx]['watermark']['size']
+            watermark_encoder = USER_DATA()[userx]['watermark']['encoder']
+            watermark_preset = USER_DATA()[userx]['watermark']['preset']
+            watermark_crf = USER_DATA()[userx]['watermark']['crf']
+            watermark_map = USER_DATA()[userx]['watermark']['map']
+            watermark_copysub = USER_DATA()[userx]['watermark']['copy_sub']
+            watermark_encode = USER_DATA()[userx]['watermark']['encode']
+            if watermark_encode:
+                encode_text = f"{watermark_encoder}"
+            else:
+                encode_text = f"False"
+            text =f'🥽Position: {watermark_position}\n'\
+                            f'🛸Size: {watermark_size}\n'\
+                            f'🍬Encoder: {encode_text}\n'\
+                            f'♒Preset: {watermark_preset}\n'\
+                            f'⚡CRF: {watermark_crf}\n'\
+                            f'🍓Map: {watermark_map}\n'\
+                            f'🍄Copy Subtitles: {watermark_copysub}'
+            if head:
+                text = f'Watermark Settings:\n{text}'
+            else:
+                text = f'🍫Mode: Watermark\n{text}'
             return text
     else:
         return False

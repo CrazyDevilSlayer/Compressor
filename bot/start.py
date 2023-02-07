@@ -52,6 +52,12 @@ async def get_url_from_message(new_event):
             return False
         else:
             return str(new_event.message.message)
+        
+def check_value_int(x):
+    try:
+        return int(x)
+    except:
+        return False
 
 
 #////////////////////////////////////Telethon Functions////////////////////////////////////#
@@ -98,6 +104,23 @@ async def ask_media(event, user_id, userx, detailed_message, keywords, message, 
                 else:
                     await ask.reply(f'❗You already started a task, now send {str(new_event.message.message)} command again.')
                     return "cancelled"
+
+###############------Ask_WaterMark------###############
+async def ask_watermark(event, user_id, userx, cmd, wt_check):
+    watermark_path = f'./userdata/{str(userx)}_watermark.jpg'
+    watermark_check = exists(watermark_path)
+    if watermark_check:
+            if wt_check:
+                return True
+            text = f"Watermark Already Present\n\n🔷Send Me New Watermark Image To Replace."
+    else:
+            text = f"Watermark Not Present\n\n🔶Send Me Watermark Image To Save."
+    new_event = await ask_media(event, user_id, userx, get_details("watermark", userx, True), [f"/{cmd}", "stop"], text, 120, "image/", False)
+    if new_event and new_event not in ["cancelled"]:
+        await Client.download_media(new_event.message, watermark_path)
+        if exists(watermark_path):
+            return True
+    return False
 
 
 #////////////////////////////////////Bot_Commands////////////////////////////////////#
@@ -171,6 +194,7 @@ async def _settings(event):
         [Button.inline('📝 Progress Bar', 'progress_settings')],
         [Button.inline('🏮 Compression', 'compression_settings')],
         [Button.inline('🍧 Merge', 'merge_settings')],
+        [Button.inline('🛺 Watermark', 'watermark_settings')],
         [Button.inline('⭕Close Settings', 'close_settings')]
     ])
         return
@@ -237,6 +261,33 @@ async def _merge(event):
         await asynciosleep(1)
         await event.reply("✅Task Completed Successfully")
     return
+
+
+###############------Watermark------###############
+@Client.on(events.NewMessage(incoming=True, pattern='/watermark'))
+async def _watermark(event):
+    user_id = event.message.chat.id
+    userx = event.message.sender.id
+    pcmd = "watermark"
+    validate = await init_user(event, userx)
+    if not validate:
+        return
+    check_watermark = await ask_watermark(event, user_id, userx, pcmd, True)
+    if not check_watermark:
+        await event.reply("❗Failed To Get Watermark.")
+        return
+    ext = await get_ext(event)
+    queue_task = get_queue()[userx]['started']
+    new_event = await ask_media(event, user_id, userx, get_details(pcmd, userx, True), [f"/{pcmd}", "stop"], "Send Video or URL", 120, "video/", queue_task)
+    if new_event and new_event not in ["cancelled"]:
+            url = await get_url_from_message(new_event)
+            trash_list = []
+            await start_process(Client, new_event, user_id, userx, False, queue_task, url, ext, pcmd, False, "1/1", False, False, trash_list)
+            await clear_trash_list(trash_list)
+            if not queue_task:
+                await asynciosleep(1)
+                await event.reply("✅Task Completed Successfully")
+            return
 
 
 ###############------Start/Process_Queue------###############
@@ -355,7 +406,7 @@ async def _clearonequeue(event):
                 msg+= f"`{str(q)}` - {str(queue_data['file_name'])} [{str(queue_data['process'])}]\n"
                 q+=1
             async with Client.conversation(user_id) as conv:
-                handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: int(e.message.message)), timeout=60)
+                handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: check_value_int(e.message.message)), timeout=60)
                 ask = await event.reply(f'{str(msg)}')
                 try:
                     new_event = await handle
@@ -452,7 +503,8 @@ async def _renew(event):
                 await new_user(userx, SAVE_TO_DATABASE)
         await event.reply("*️⃣Are you sure?\n\n🚫 This will delete all your downloads and saved watermark locally 🚫", buttons=[
                 [Button.inline('Yes 🚫', 'renew_True')],
-                [Button.inline('No 😓', 'renew_False')]
+                [Button.inline('No 😓', 'renew_False')],
+                [Button.inline('⭕Close', 'close_settings')]
             ])
         return
 
@@ -484,7 +536,7 @@ async def _addsudo(event):
         if userx not in USER_DATA():
                 await new_user(userx, SAVE_TO_DATABASE)
         async with Client.conversation(user_id) as conv:
-                handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: int(e.message.message)), timeout=60)
+                handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: check_value_int(e.message.message)), timeout=60)
                 ask = await event.reply(f'*️⃣Send User Numerical ID')
                 try:
                     new_event = await handle
@@ -512,7 +564,7 @@ async def _delsudo(event):
         if userx not in USER_DATA():
                 await new_user(userx, SAVE_TO_DATABASE)
         async with Client.conversation(user_id) as conv:
-                handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: int(e.message.message)), timeout=60)
+                handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: check_value_int(e.message.message)), timeout=60)
                 ask = await event.reply(f'*️⃣Send User Numerical ID')
                 try:
                     new_event = await handle
@@ -574,4 +626,36 @@ async def _logs(event):
             await Client.send_file(user_id, file=log_file, allow_cache=False)
         else:
             await event.reply("❗Log File Is Not Found")
+        return
+    
+
+###############------Reset_Database------###############
+@Client.on(events.NewMessage(incoming=True, pattern='/resetdb'))
+async def _resetdb(event):
+        userx = event.message.sender.id
+        if userx not in sudo_users:
+                        await event.reply("❌Not Authorized")
+                        return
+        await event.reply("*️⃣Are you sure?\n\n🚫 This will reset your all database 🚫", buttons=[
+                [Button.inline('Yes 🚫', 'resetdb_True')],
+                [Button.inline('No 😓', 'resetdb_False')],
+                [Button.inline('⭕Close', 'close_settings')]
+            ])
+        return
+
+###############------Save_WaterMark_Image------###############
+@Client.on(events.NewMessage(incoming=True, pattern='/savewatermark'))
+async def _savewatermark(event):
+        userx = event.message.sender.id
+        user_id = event.message.chat.id
+        if userx not in sudo_users:
+                        await event.reply("❌Not Authorized")
+                        return
+        if userx not in USER_DATA():
+                await new_user(userx, SAVE_TO_DATABASE)
+        check_watermark = await ask_watermark(event, user_id, userx, "savewatermark", False)
+        if not check_watermark:
+            await event.reply("❗Failed To Get Watermark.")
+        else:
+            await event.reply("✅Watermark saved successfully.")
         return

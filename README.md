@@ -19,6 +19,8 @@ To configure this bot add the environment variables stated below. Or add them in
 ```
 compress - Compress Video
 merge - Merge Video
+watermark - Add Watermark To Video
+savewatermark - Save Watermark Image
 queue - To Start/Process Queue
 clearqueue - Clear All Queued Tasks
 terminatequeue - Terminate Queued Tasks
@@ -30,6 +32,7 @@ delsudo - Delete Sudo User
 getsudo - Get Sudo Users List
 log - Get Log Message
 logs - Get Log File
+resetdb - Reset Database
 renew - Renew Storage
 time - Get Bot Uptime
 settings - Settings Section

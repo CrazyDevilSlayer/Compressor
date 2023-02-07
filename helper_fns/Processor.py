@@ -189,12 +189,14 @@ async def start_process(tgclient, new_event, user_id, userx, check, queue_task, 
             datam = [file_name, get_time(), cancel_text, process_type, pindex]
             if process_type=="compress":
                 result = await Processor.compress(tgclient, reply, user_id, userx, file_loc, progress, amap_options, output_file, duration, check_data, datam)
-            if process_type=="merge":
+            elif process_type=="merge":
                 concat_file = f"{str(file_name)}_{str(userx)}_merge_concat.txt"
                 trash_list.append(concat_file)
                 with open(concat_file, 'w', encoding="utf-8") as f:
                         f.write(str(infile_names.strip()))
                 result = await Processor.merge(tgclient, reply, user_id, userx, concat_file, progress, output_file, duration, check_data, datam, dw_files)
+            elif process_type=="watermark":
+                result = await Processor.watermark(tgclient, reply, user_id, userx, file_loc, progress, amap_options, output_file, duration, check_data, datam)
             if not result:
                 await clean_up(process_id, sub_process_id, trash_list)
                 return
@@ -221,7 +223,7 @@ async def start_process(tgclient, new_event, user_id, userx, check, queue_task, 
             datam = [file_name, '🔼Uploading Video', '𝚄𝚙𝚕𝚘𝚊𝚍𝚎𝚍', cancel_text, process_type, pindex]
             await upload_files(tgclient, user_id, userx, new_event, final_files, caption, reply, datam, check_data, thumbnail)
             await send_sample_video(tgclient, new_event, user_id, userx, duration, final_files[-1], file_name, work_loc)
-            await send_ss(tgclient, new_event, user_id, userx, duration, final_files[-1], file_name, work_loc)
+            await send_ss(tgclient, new_event, user_id, userx, duration, final_files[-1], file_name, work_loc, False)
             await clean_up(process_id, sub_process_id, trash_list)
             await reply.delete()
             return
@@ -246,18 +248,19 @@ async def get_queue_data(queue_data):
 
 ###############------Send_Sample_Video------###############
 async def send_sample_video(tgclient, event, user_id, userx, duration, input_video, file_name, work_loc):
-    if USER_DATA()[userx]['gen_sample']:
-            sample_name = f"{work_loc}/sample_{file_name}"
-            vstart_time, vend_time = await get_cut_duration(duration)
-            cmd_sample = ["ffmpeg", "-ss", str(vstart_time), "-to",  str(vend_time), "-i", f"{input_video}","-c", "copy", '-y', f"{sample_name}"]
-            sample_result = await run_process_command(cmd_sample)
-            if sample_result and exists(sample_name):
-                sscaption = f"🎞 Sample Video"
-                try:
-                    await tgclient.send_file(user_id, file=sample_name, allow_cache=False, reply_to=event.message, caption=sscaption)
-                except:
-                    pass
-                remove(sample_name)
+    if duration>60:
+        if USER_DATA()[userx]['gen_sample']:
+                sample_name = f"{work_loc}/sample_{file_name}"
+                vstart_time, vend_time = await get_cut_duration(duration)
+                cmd_sample = ["ffmpeg", "-ss", str(vstart_time), "-to",  str(vend_time), "-i", f"{input_video}","-c", "copy", '-y', f"{sample_name}"]
+                sample_result = await run_process_command(cmd_sample)
+                if sample_result and exists(sample_name):
+                    sscaption = f"🎞 Sample Video"
+                    try:
+                        await tgclient.send_file(user_id, file=sample_name, allow_cache=False, reply_to=event.message, caption=sscaption)
+                    except:
+                        pass
+                    remove(sample_name)
     return
 
 
@@ -527,9 +530,12 @@ async def gen_ss_list(duration, ss_no):
 
 
 ###############------Send_ScreenShots------###############
-async def send_ss(tgclient, event, user_id, userx, duration, input_video, file_name, work_loc):
-    if USER_DATA()[userx]['gen_ss']:
-        ss_n0 = USER_DATA()[userx]['ss_no']
+async def send_ss(tgclient, event, user_id, userx, duration, input_video, file_name, work_loc, check_no):
+    if USER_DATA()[userx]['gen_ss'] or check_no:
+        if not check_no:
+            ss_n0 = USER_DATA()[userx]['ss_no']
+        else:
+            ss_n0 = check_no
         ss_list = await gen_ss_list(duration, ss_n0)
         sn0 = 1
         for ss_time in ss_list:

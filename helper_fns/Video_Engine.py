@@ -117,3 +117,41 @@ class Processor:
             return True
         else:
             return False
+
+    ###############------Add_Watermark------###############
+    async def watermark(Client, reply, user_id, userx, input_file, progress, amap_options, output_file, duration, check_data, datam):
+        watermark_position = USER_DATA()[userx]['watermark']['position']
+        watermark_size = USER_DATA()[userx]['watermark']['size']
+        watermark_encoder = USER_DATA()[userx]['watermark']['encoder']
+        watermark_preset = USER_DATA()[userx]['watermark']['preset']
+        watermark_crf = USER_DATA()[userx]['watermark']['crf']
+        watermark_map = USER_DATA()[userx]['watermark']['map']
+        watermark_copysub = USER_DATA()[userx]['watermark']['copy_sub']
+        watermark_path = f'./userdata/{str(userx)}_watermark.jpg'
+        command = ['ffmpeg','-hide_banner',
+                                    '-progress', f"{progress}",
+                                    '-i', f'{str(input_file)}', "-i", f"{str(watermark_path)}"]
+        if watermark_map:
+            command+=['-map','0:v?',
+                                        '-map',f'{str(amap_options)}?',
+                                        "-map", "0:s?"]
+        command+= ["-filter_complex", f"[1][0]scale2ref=w='iw*{watermark_size}/100':h='ow/mdar'[wm][vid];[vid][wm]overlay={watermark_position}"]
+        if watermark_copysub:
+            command+= ["-c:s", "copy"]
+        if USER_DATA()[userx]['watermark']['encode']:
+                if watermark_encoder=='libx265':
+                        command+= ['-vcodec','libx265','-vtag', 'hvc1']
+                else:
+                        command+= ['-vcodec','libx264']
+        else:
+            command+= ['-codec:a','copy']
+        command+= ['-preset', watermark_preset, '-crf', f'{str(watermark_crf)}', '-y', f'{str(output_file)}']
+        datam.append(f'🛺Adding Watermark')
+        result = await ffmpeg_engine(Client, user_id, userx, reply, command, input_file, output_file, progress, duration, check_data, datam, True)
+        if result[0]:
+            if result[1]:
+                await reply.edit("🔒Task Cancelled By User")
+                return False
+            return True
+        else:
+            return False
