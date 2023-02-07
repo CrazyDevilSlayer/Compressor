@@ -128,6 +128,9 @@ async def ask_watermark(event, user_id, userx, cmd, wt_check):
 ###############------Start_Message------###############
 @Client.on(events.NewMessage(incoming=True, pattern='/start'))
 async def _batch(event):
+    userx = event.message.sender.id
+    if userx not in USER_DATA():
+            await new_user(userx, SAVE_TO_DATABASE)
     text = f"Hi {get_mention(event)}, I Am Alive."
     await event.reply(text, buttons=[
     [Button.url('⭐ Bot By 𝚂𝚊𝚑𝚒𝚕 ⭐', 'https://t.me/nik66')],
@@ -140,6 +143,8 @@ async def _batch(event):
 async def _timecmd(event):
     user_id = event.message.chat.id
     userx = event.message.sender.id
+    if userx not in USER_DATA():
+            await new_user(userx, SAVE_TO_DATABASE)
     if userx in sudo_users:
         await event.reply(f'♻Bot Is Alive For {getbotuptime()}')
     else:
@@ -151,6 +156,8 @@ async def _timecmd(event):
 async def _cancel(event):
   user_id = event.message.chat.id
   userx = event.message.sender.id
+  if userx not in USER_DATA():
+        await new_user(userx, SAVE_TO_DATABASE)
   if userx in sudo_users:
         commands = event.message.message.split(' ')
         if len(commands)==3:
