@@ -120,7 +120,11 @@ async def ffmpeg_engine(Client, user_id, userx, reply, command, input_file, outp
         msg_data = ['Processing']
         return [True, False]
     else:
-        cc=f"{str(datam[0])}\n\n❌{str(datam[3]).upper()} Process Failed\n\n🔶Return Code: {str(return_code)}"
+        try:
+            failed_ext = str(output_file).split("/")[-1].split(".")[-1]
+        except:
+            failed_ext = "Unknown"
+        cc=f"{str(datam[0])}\n\n❌{str(datam[3]).upper()} Process Failed\nFile Ext: {str(failed_ext)}\n\n🔶Return Code: {str(return_code)}"
         fail_file = f"{str(datam[0])}_{str(datam[3]).upper()}_log.txt"
         with open(fail_file, 'w', encoding="utf-8") as f:
                 f.write(str(all_data))
