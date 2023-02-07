@@ -22,6 +22,7 @@ from helper_fns.Queue import get_queue
 USER = Config.USER
 LOGGER = Config.LOGGER
 punc = ['!', '|', '{', '}', ';', ':', "'", '=', '"', '\\', ',', '<', '>', '/', '?', '@', '#', '$', '%', '^', '&', '*', '~', "  ", "\t", "+", "b'", "'"]
+ext_list = ['mov', 'avi', 'mp4', 'm4v', 'wmv', 'flv', 'mkv', '3gp', 'mpg', 'mpeg', 'm2ts', 'vob', 'mts', 'asf', 'rm', 'swf', 'dv', 'mod', 'ogv', 'divx', 'webm', 'f4v', 'rmvb', 'ts', 'm2v', 'avs', 'dat', 'm1v', '3g2', 'm2p', 'm4b', 'mjpeg', 'dvr-ms', 'movie', '3gpp', 'amv', 'f4p', 'm2t', 'dif', 'mxf', 'nsv', 'f4a', 'mpe', 'm2a', 'ram', 'mpa', 'mpv', 'm3u8', 'ogm', 'm4r', 'm4a', 'm4p', 'tp', 'vdr', 'tp0', 'm1a', 'viv', '3gpp2', 'tsv', 'mxv', 'm4vh', 'dvx', 'fli', 'dcr', 'f4b', 'flc', 'vp6', 'flx', 'm2vh', 'm2v8', 'movie2', 'm2p8', 'mp2v', 'mpgv', 'm2v2', 'vp7', 'm2v9', 'm2v5', 'vivo', 'vfw', 'mvv', 'mv4', 'flv4', 'mv2', 'mv2v', 'mv4v', 'tivo', 'mvv4', 'mvv2', 'dvs', 'm4e', 'svi', 'vpj', 'vp8', 'mp3', 'aac', 'wav', 'flac', 'ogg', 'aif', 'atrac', 'au', 'opus', 'dss', 'amr', 'wma', 'ra', 'vqf', 'wv', 'ape', 'ac3', 'alac', 'mpc', 'gsm', 'ofr', 'shn', 'mid', 'aifc', 'mp2', 'it', 'mt2', 's3m', 'xm', 'aiff', 'wmav', 'rv', 'mp1', 'mka', 'oga', 'aacs', 'dts', 'dts-hd', 'cda', 'acm', 'wmax', 'wmau', 'wma2', 'wma1', 'wmv2', 'wmv1', 'wmv3', 'oma', 'gxf', 'aacx', 'aax', 'm4l', 'oms', 'aob', 'm3u', 'aacplus', 'aacplusv2', 'aacplusv4', 'acelp', 'amr-wb', 'amr-nb', 'ima-adpcm', 'net', 'voc', 'pcm', 'vqa', 'wm', 'dtswav', 'srt', 'ssa', 'sub', 'txt', 'smi', 'psb', 'idx', 'vtt', 'ass', 'dfxp', 'mks', 'mpl', 'cap', 'stl', 'scc', 'utf', 'aqt', 'rt', 'gsub', 'jss', 'pjs', 'mpsub', 'evt', 'sbv', 'xml', 'rtx', 'usf', 'dks', 'lrc', 'ttxt', 'vttx', 'sbtt', 'qtx', 'ttml', 'sami', 'dvb', 'lrcx', 'slt', 'sbt', 'spt', 's2k', 'tt', 'mxml', 'vsf', 'ssf', 'ttaf', 'asc']
 
 
 #////////////////////////////////////Functions////////////////////////////////////#
@@ -54,7 +55,11 @@ async def get_file_details_url(url):
                 file_name = False
                 if d:
                     try:
-                        file_name = findall("filename=(.+)", d)[0].replace("'", "").replace('"', '').strip()
+                        file_name_data = findall("filename=(.+)", d)
+                        if len(file_name_data):
+                            file_name = file_name_data[0].replace("'", "").replace('"', '').strip()
+                        else:
+                            file_name = str(url).split("/")[-1].strip()
                     except Exception as e:
                         LOGGER.info(str(e))
                         print(e)
@@ -387,6 +392,13 @@ async def get_thumbnail(tgclient, event, user_id, userx, loc,  filename, detaile
     else:
         return thumb
 
+###############------Get_Extention------###############
+async def get_extention_from_filename(filename):
+    test_ext = str(filename.split(".")[-1]).strip()
+    if test_ext in ext_list:
+        return test_ext
+    else:
+        return False
 
 ###############------Get_FileName------###############
 async def get_filename(tgclient, event, user_id, userx, process_id, ext, detailed_message, timeout, loc, check, url):
@@ -406,12 +418,13 @@ async def get_filename(tgclient, event, user_id, userx, process_id, ext, detaile
                     filename = event.message.file.name
             else:
                     filename = process_id
-        if filename:
-            if "." in filename:
-                    try:
-                        ext = str(filename.split(".")[-1]).strip()
-                    except:
-                        pass
+                    
+    if filename and not ext:
+        if "." in filename:
+                try:
+                    ext = await get_extention_from_filename(filename)
+                except:
+                    pass
     else:
         async with tgclient.conversation(user_id) as conv:
             handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: e.message.message), timeout=timeout)
@@ -430,7 +443,7 @@ async def get_filename(tgclient, event, user_id, userx, process_id, ext, detaile
                 data = new_event.message.message.split("|")
                 filename = data[0]
                 if len(data)>1:
-                    ext = data[-1]
+                    ext = data[-1].replace('.', '').strip()
             else:
                 filename = new_event.message.message
     try:
@@ -439,7 +452,6 @@ async def get_filename(tgclient, event, user_id, userx, process_id, ext, detaile
                     filename = filename.replace(ele, '')
     except:
         filename = process_id
-        
     if not ext:
         async with tgclient.conversation(user_id) as conv:
             handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: e.message.message), timeout=timeout)
