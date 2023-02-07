@@ -178,7 +178,7 @@ async def start_process(tgclient, new_event, user_id, userx, check, queue_task, 
                     duration = get_video_duration(file_loc)
             work_loc = await make_direc(f'{str(userx)}_work')
             progress = f"{work_loc}/progress_{file_name}.txt"
-            caption = f"⚡{str(process_type).upper()}⚡\n\n"
+            caption = f"\n⚡{str(process_type).upper()}⚡"
             if process_type!="merge":
                     amap_options, caption = await select_audio(new_event, userx, file_loc, caption)
                     file_loc, file_name, ext, caption = await change_metadata(new_event, userx, file_loc, file_name, ext, caption)
@@ -317,7 +317,7 @@ async def select_audio(new_event, userx, input_file, caption):
                                                                                 stream_no = stream_data[cstream]['index']
                                                                                 amap_options = f'0:a:{str(int(stream_no)-1)}'
                                                                                 await new_event.reply(f'✅Audio Selected Successfully\n\n`{str(cstream)}`\nStream No: {str(stream_no)}')
-                                                                                caption += f"✅Audio: {str(cstream)}"
+                                                                                caption = f"✅Audio: {str(cstream)}\n" + caption
                                                                                 return [amap_options, caption]
                                                                 await new_event.reply(f'❗{language} Language Not Found In Video.')
                                                                 return [amap_options, caption]
@@ -344,7 +344,7 @@ async def change_metadata(new_event, userx, dl_loc, filename, ext, caption):
                     met_result = await run_process_command(cmd_meta)
             if met_result:
                     await new_event.reply(f"✅Metadata Set Successfully")
-                    caption+= f"\n✅Metadata: {custom_metadata_title}"
+                    caption = f"✅Metadata: {custom_metadata_title}\n" + caption
                     return [output_meta, filename, ext, caption]
             else:
                     await new_event.reply(f"❗Failed To Set MetaData")
@@ -607,7 +607,7 @@ async def upload_drive(tgclient, event, user_id, reply, caption, userx, r_config
                         q = 1
                         for output_vid in final_files:
                                 file_name = output_vid.split("/")[-1].replace(".VideoFlux", "").replace("VideoFlux", "")
-                                caption = f"{file_name}\n\n" + str(caption).strip()
+                                caption = f"🔷{file_name}\n" + str(caption).strip()
                                 datam[0] = file_name
                                 datam[1] = f'❣Uploading To Drive[{str(q)}/{str(total)}]'
                                 try:
@@ -646,9 +646,9 @@ async def upload_drive(tgclient, event, user_id, reply, caption, userx, r_config
                                                                     link_text = f"⛓Link: `https://drive.google.com/file/d/{upload[3]}/view`"
                                                                 else:
                                                                     link_text = f"⛓File ID: `{upload[3]}`"
-                                                                text = f"✅{file_name} Successfully Uploade To Drive\n\n{link_text}\n\n💽Size: {fisize}\n\n{caption}"
+                                                                text = f"✅Successfully Uploade To {str(drive_name)}\n\n{link_text}\n\n💽Size: {fisize}\n\n{caption}"
                                                         else:
-                                                                text = f"✅{file_name} Successfully Uploade To Drive\n\n❗Failed To Get Link: `{str(upload[3])}`\n\n{caption}"
+                                                                text = f"✅Successfully Uploade To {str(drive_name)}\n\n❗Failed To File ID: `{str(upload[3])}`\n\n{caption}"
                                                         await event.reply(text)
                                 except Exception as e:
                                         await event.reply(f"❌Error While Uploading To Drive\n\n{str(e)}")

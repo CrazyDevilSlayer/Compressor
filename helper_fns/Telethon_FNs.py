@@ -53,7 +53,7 @@ async def upload_tg_video(tgclient, user_id, userx,  event, files, caption, repl
                 duration = get_video_duration(files[i])
                 attributes=(DocumentAttributeVideo(duration, 0, 0),)
                 filename = str(files[i].split("/")[-1]).replace(".VideoFlux", "").replace("VideoFlux", "")
-                caption = f"{filename}\n\n" + str(caption).strip()
+                caption = f"🔷{filename}\n" + str(caption).strip()
                 datam[1] = f"🔼Uploading [{str(i+1)}/{str(total_files)}]"
                 with open(files[i], "rb") as f:
                     ok = await upload_file(
