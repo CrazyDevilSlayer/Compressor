@@ -16,6 +16,7 @@ from asyncio import sleep as asynciosleep
 from aiofiles import open as aiofiles_open
 from helper_fns.Telethon_FNs import download_tg_file, upload_tg_video
 from helper_fns.Queue import get_queue
+from urllib.parse import unquote
 
 
 #////////////////////////////////////Variables////////////////////////////////////#
@@ -59,7 +60,7 @@ async def get_file_details_url(url):
                         if len(file_name_data):
                             file_name = file_name_data[0].replace("'", "").replace('"', '').strip()
                         else:
-                            file_name = str(url).split("/")[-1].strip()
+                            file_name = str(unquote(url)).split("/")[-1].strip()
                     except Exception as e:
                         LOGGER.info(str(e))
                         print(e)
