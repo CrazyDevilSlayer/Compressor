@@ -1,6 +1,6 @@
 from config import Config
 from telethon import events, Button
-from helper_fns.Helper import USER_DATA, getbotuptime, new_user, get_details, clear_trash_list, process_checker, get_config, saveoptions, delete_trash, save_restart, get_logs_msg, gen_random_string
+from helper_fns.Helper import USER_DATA, getbotuptime, new_user, get_details, clear_trash_list, process_checker, get_config, saveoptions, delete_trash, save_restart, get_logs_msg, gen_random_string, get_host_stats
 from helper_fns.Ruunung_Process import append_master_process, remove_master_process, get_master_process, remove_sub_process
 from os.path import exists
 from asyncio import sleep as asynciosleep
@@ -663,3 +663,9 @@ async def _savewatermark(event):
         else:
             await event.reply("✅Watermark saved successfully.")
         return
+
+###############------Save_Stats------###############
+@Client.on(events.NewMessage(incoming=True, pattern='/stats'))
+async def _stats_msg(event):
+    await event.reply(str(get_host_stats()), parse_mode='html')
+    return

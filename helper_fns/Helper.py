@@ -7,7 +7,7 @@ from asyncio import get_event_loop
 from os.path import exists, isdir
 from subprocess import PIPE as subprocessPIPE, STDOUT as subprocessSTDOUT
 from subprocess import run as subprocessrun
-from psutil import disk_usage, cpu_percent,virtual_memory
+from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters
 from shlex import split as shlexsplit
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
@@ -455,6 +455,26 @@ def get_stats(userx):
                         f'⚓Free Ram: {get_human_size(memory.available)}'
         else:
             stats =f'🚀CPU Usage: {cpu_percent(interval=0.5)}%'
+        return stats
+
+###############------Get_Stats_Message------###############
+def get_host_stats():
+        total, used, free, disk = disk_usage('/')
+        swap = swap_memory()
+        memory = virtual_memory()
+        stats =f'<b>Total Disk Space:</b> {get_size(total)}\n'\
+                    f'<b>Used:</b> {get_size(used)} | <b>Free:</b> {get_size(free)}\n\n'\
+                    f'<b>Upload:</b> {get_size(net_io_counters().bytes_sent)}\n'\
+                    f'<b>Download:</b> {get_size(net_io_counters().bytes_recv)}\n\n'\
+                    f'<b>CPU:</b> {cpu_percent(interval=0.5)}%\n'\
+                    f'<b>RAM:</b> {memory.percent}%\n'\
+                    f'<b>DISK:</b> {disk}%\n\n'\
+                    f'<b>Physical Cores:</b> {cpu_count(logical=False)}\n'\
+                    f'<b>Total Cores:</b> {cpu_count(logical=True)}\n\n'\
+                    f'<b>SWAP:</b> {get_size(swap.total)} | <b>Used:</b> {swap.percent}%\n'\
+                    f'<b>Memory Total:</b> {get_size(memory.total)}\n'\
+                    f'<b>Memory Free:</b> {get_size(memory.available)}\n'\
+                    f'<b>Memory Used:</b> {get_size(memory.used)}'
         return stats
 
 

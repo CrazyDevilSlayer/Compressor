@@ -35,6 +35,7 @@ logs - Get Log File
 renew - Renew Storage
 resetdb - Reset Database
 time - Get Bot Uptime
+stats - Get Stats
 settings - Settings Section
 restart - Restart Bot
 ```
