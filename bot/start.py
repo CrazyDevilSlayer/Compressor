@@ -241,7 +241,7 @@ async def _merge(event):
     t_no = 1
     cancelled = False
     while True:
-            new_event = await ask_media(event, user_id, userx, get_details("merge", userx, True), ["/merge", "stop", "cancel"], f"Send Video or URL No. {str(t_no)}", 120, "video/", queue_task)
+            new_event = await ask_media(event, user_id, userx, get_details("merge", userx, True), ["/merge", "stop", "cancel"], f"Send Video or URL No. {str(t_no)} (Send `stop`  To Stop Adding More Video)", 120, "video/", queue_task)
             if new_event and new_event not in ["cancelled", "stopped"]:
                     url = await get_url_from_message(new_event)
                     merge_task = await get_filename(Client, new_event, user_id, userx, gen_random_string(10), ext, get_details("merge", userx, True), 120, 'dw', False, url)
