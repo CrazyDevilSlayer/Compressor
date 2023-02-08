@@ -6,6 +6,12 @@ from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 from os.path import exists
 from telethon.sessions import StringSession
+from os import system
+
+###############------Download_Config------###############
+CONFIG_FILE_URL = getenv("CONFIG_FILE_URL", False)
+if CONFIG_FILE_URL and str(CONFIG_FILE_URL).startswith("http"):
+    system(f"wget -O config.env {str(CONFIG_FILE_URL)}")
 
 
 ###############------Import_Config------###############

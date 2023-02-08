@@ -32,6 +32,10 @@ class Processor:
                 command+= ['-vcodec','libx265','-vtag', 'hvc1']
         else:
                 command+= ['-vcodec','libx264']
+        compress_use_queue_size = USER_DATA()[userx]['compress']['use_queue_size']
+        if compress_use_queue_size:
+            compress_queue_size = USER_DATA()[userx]['compress']['queue_size']
+            command+= ['-max_muxing_queue_size', f'{str(compress_queue_size)}']
         command+= ['-preset', compress_preset, '-crf', f'{str(compress_crf)}', '-y', f'{str(output_file)}']
         datam.append(f'🏮Compressing Video')
         result = await ffmpeg_engine(Client, user_id, userx, reply, command, input_file, output_file, progress, duration, check_data, datam, True)
@@ -145,6 +149,10 @@ class Processor:
                         command+= ['-vcodec','libx264']
         else:
             command+= ['-codec:a','copy']
+        watermark_use_queue_size = USER_DATA()[userx]['watermark']['use_queue_size']
+        if watermark_use_queue_size:
+            watermark_queue_size = USER_DATA()[userx]['watermark']['queue_size']
+            command+= ['-max_muxing_queue_size', f'{str(watermark_queue_size)}']
         command+= ['-preset', watermark_preset, '-crf', f'{str(watermark_crf)}', '-y', f'{str(output_file)}']
         datam.append(f'🛺Adding Watermark')
         result = await ffmpeg_engine(Client, user_id, userx, reply, command, input_file, output_file, progress, duration, check_data, datam, True)

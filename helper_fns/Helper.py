@@ -43,6 +43,8 @@ async def new_user(user_id, dbsave):
         User_Data[user_id]['watermark']['position'] = '5:5'
         User_Data[user_id]['watermark']['size'] = '15'
         User_Data[user_id]['watermark']['crf'] = '23'
+        User_Data[user_id]['watermark']['use_queue_size'] = False
+        User_Data[user_id]['watermark']['queue_size'] = '9999'
         User_Data[user_id]['watermark']['use_crf'] = False
         User_Data[user_id]['watermark']['encode'] = True
         User_Data[user_id]['watermark']['encoder'] = 'libx265'
@@ -62,6 +64,8 @@ async def new_user(user_id, dbsave):
         User_Data[user_id]['compress'] = {}
         User_Data[user_id]['compress']['preset'] = 'ultrafast'
         User_Data[user_id]['compress']['crf'] = '23'
+        User_Data[user_id]['compress']['use_queue_size'] = False
+        User_Data[user_id]['compress']['queue_size'] = '9999'
         User_Data[user_id]['compress']['map_audio'] = True
         User_Data[user_id]['compress']['map_sub'] = True
         User_Data[user_id]['compress']['map'] = True
@@ -240,6 +244,13 @@ def TimeFormatter(milliseconds: int) -> str:
 def get_current_time():
     return str(datetime.now(IST).strftime('%I:%M:%S %p (%d-%b)'))
 
+
+def get_time_from_string(check_time):
+    try:
+        return datetime.strptime(check_time, '%Y-%m-%dT%H:%M:%S.%f%z').astimezone(IST).strftime('%I:%M:%S %p (%d-%b)')
+    except:
+        return check_time
+    
 
 ###############------Size_Functions------###############
 def get_human_size(num):
@@ -487,10 +498,17 @@ def get_details(pmode, userx, head):
             compress_crf = User_Data[userx]['compress']['crf']
             compress_map = User_Data[userx]['compress']['map']
             compress_copysub = User_Data[userx]['compress']['copy_sub']
+            compress_use_queue_size = User_Data[userx]['compress']['use_queue_size']
+            compress_queue_size = User_Data[userx]['compress']['queue_size']
+            if compress_use_queue_size:
+                qsize_text = f"🎹Queue Size: {str(compress_queue_size)}"
+            else:
+                qsize_text = f"📻Use Queue Size: False"
             text =f'🍬Encoder: {compress_encoder}\n'\
                             f'♒Preset: {compress_preset}\n'\
                             f'⚡CRF: {compress_crf}\n'\
                             f'🍓Map: {compress_map}\n'\
+                            f'{qsize_text}\n'\
                             f'🍄Copy Subtitles: {compress_copysub}'
             if head:
                 text = f'Compression Settings:\n{text}'
@@ -508,14 +526,20 @@ def get_details(pmode, userx, head):
             return text
         
         elif pmode=="watermark":
-            watermark_position = USER_DATA()[userx]['watermark']['position']
-            watermark_size = USER_DATA()[userx]['watermark']['size']
-            watermark_encoder = USER_DATA()[userx]['watermark']['encoder']
-            watermark_preset = USER_DATA()[userx]['watermark']['preset']
-            watermark_crf = USER_DATA()[userx]['watermark']['crf']
-            watermark_map = USER_DATA()[userx]['watermark']['map']
-            watermark_copysub = USER_DATA()[userx]['watermark']['copy_sub']
-            watermark_encode = USER_DATA()[userx]['watermark']['encode']
+            watermark_position = User_Data[userx]['watermark']['position']
+            watermark_size = User_Data[userx]['watermark']['size']
+            watermark_encoder = User_Data[userx]['watermark']['encoder']
+            watermark_preset = User_Data[userx]['watermark']['preset']
+            watermark_crf = User_Data[userx]['watermark']['crf']
+            watermark_map = User_Data[userx]['watermark']['map']
+            watermark_copysub = User_Data[userx]['watermark']['copy_sub']
+            watermark_encode = User_Data[userx]['watermark']['encode']
+            watermark_use_queue_size = User_Data[userx]['watermark']['use_queue_size']
+            watermark_queue_size = User_Data[userx]['watermark']['queue_size']
+            if watermark_use_queue_size:
+                qsize_text = f"🎹Queue Size: {str(watermark_queue_size)}"
+            else:
+                qsize_text = f"📻Use Queue Size: False"
             if watermark_encode:
                 encode_text = f"{watermark_encoder}"
             else:
@@ -526,6 +550,7 @@ def get_details(pmode, userx, head):
                             f'♒Preset: {watermark_preset}\n'\
                             f'⚡CRF: {watermark_crf}\n'\
                             f'🍓Map: {watermark_map}\n'\
+                            f'{qsize_text}\n'\
                             f'🍄Copy Subtitles: {watermark_copysub}'
             if head:
                 text = f'Watermark Settings:\n{text}'

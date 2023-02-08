@@ -12,7 +12,7 @@ from os.path import isfile, exists
 sudo_users = Config.SUDO_USERS
 encoders_list = ['libx265', 'libx264']
 crf_list = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51']
-wsize_list =['8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25']
+wsize_list =['12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
 presets_list =  ['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow']
 bool_list = [True, False]
 ws_name = {'5:5': 'Top Left', 'main_w-overlay_w-5:5': 'Top Right', '5:main_h-overlay_h': 'Bottom Left', 'main_w-overlay_w-5:main_h-overlay_h-5': 'Bottom Right'}
@@ -72,76 +72,23 @@ async def get_metadata(user_id, userx, event, timeout, message):
             return metadata
 
 
-#////////////////////////////////////Callbacks////////////////////////////////////#
-@Client.on(events.CallbackQuery)
-async def callback(event):
-        txt = event.data.decode()
-        user_id = event.chat.id
-        userx = event.sender.id
-        if userx not in USER_DATA():
-            await new_user(userx, SAVE_TO_DATABASE)
-        
-        if txt.startswith("settings"):
-            text = f"⚙ Hi {get_mention(event)} Choose Your Settings"
-            await event.edit(text, buttons=[
-            [Button.inline('#️⃣ General', 'general_settings')],
-            [Button.inline('📝 Progress Bar', 'progress_settings')],
-            [Button.inline('🏮 Compression', 'compression_settings')],
-            [Button.inline('🍧 Merge', 'merge_settings')],
-            [Button.inline('🛺 Watermark', 'watermark_settings')],
-            [Button.inline('⭕Close Settings', 'close_settings')]
-        ])
-            return
-        
-        elif txt=="close_settings":
-            await event.delete()
-            return
-        
-        elif txt.startswith("resetdb"):
-            new_position = eval(txt.split("_", 1)[1])
-            if new_position:
-                reset = await resetdatabase(SAVE_TO_DATABASE)
-                if reset:
-                    text = f"✔Database Reset Successfull"
-                else:
-                    text = f"❌Database Reset Failed"
-                await event.answer(text, alert=True)
-            else:
-                await event.answer(f"Why You Wasting My Time.", alert=True)
-            return
-        
-        
-        elif txt.startswith("renew"):
-            new_position = eval(txt.split("_", 1)[1])
-            if new_position:
-                g_d_list = ['app.py','sample_config.env','start.sh','.gitignore','LICENSE','README.md', 'sthumb.jpg','Logging.txt', 'db_handler.py', 'config.py', 'bot', 'requirements.txt', 'Dockerfile', 'config.env', 'helper_fns', 'docker-compose.yml', 'thumb.jpg', 'main.py', 'userdata']
-                g_list = listdir()
-                g_del_list = list(set(g_list) - set(g_d_list))
-                deleted = []
-                if len(g_del_list) != 0:
-                    for f in g_del_list:
-                        if isfile(f):
-                            if not(f.endswith(".session")) and not(f.endswith(".session-journal")):
-                                print(f)
-                                await delete_trash(f)
-                                deleted.append(f)
-                        else:
-                            print(f)
-                            await delete_all(f)
-                            deleted.append(f)
-                    text = f"✔Deleted {len(deleted)} objects 🚮\n\n{str(deleted)}"
-                    try:
-                            await event.answer(text, alert=True)
-                    except:
-                        await event.edit(text)
-                else:
-                    await event.answer(f"Nothing to clear 🙄", alert=True)
-                    return
-            else:
-                await event.answer(f"Why You Wasting My Time.", alert=True)
-                return
-        
-        elif txt.startswith("general"):
+async def get_text_data(user_id, userx, event, timeout, message):
+    async with Client.conversation(user_id) as conv:
+            handle = conv.wait_event(events.NewMessage(chats=user_id, incoming=True, from_users=[userx], func=lambda e: e.message.message), timeout=timeout)
+            ask = await event.reply(f'*️⃣ {str(message)} [{str(timeout)} secs]')
+            try:
+                new_event = await handle
+            except Exception as e:
+                await ask.reply('🔃Timed Out! Tasked Has Been Cancelled.')
+                print(e)
+                return False
+            return new_event
+
+#////////////////////////////////////Callbacks_Functions////////////////////////////////////#
+
+
+###############------General------###############
+async def general_callback(event, txt, userx, user_id):
             new_position = txt.split("_", 1)[1]
             r_config = f'./userdata/{str(userx)}_rclone.conf'
             check_config = exists(r_config)
@@ -264,8 +211,9 @@ async def callback(event):
             else:
                 await Client.send_message(user_id, "⚙ General Settings", buttons=KeyBoard)
             return
-        
-        elif txt.startswith("progress"):
+
+###############------Progress------###############
+async def progress_callback(event, txt, userx):
             new_position = txt.split("_", 1)[1]
             KeyBoard = []
             if txt.startswith("progressdetailedprogress"):
@@ -327,9 +275,9 @@ async def callback(event):
             KeyBoard.append([Button.inline(f'↩Back', 'settings')])
             await event.edit("⚙ Progress Bar Settings", buttons=KeyBoard)
             return
-        
-        
-        elif txt.startswith("compression"):
+
+###############------Compress------###############
+async def compress_callback(event, txt, userx, edit):
             new_position = txt.split("_", 1)[1]
             KeyBoard = []
             if txt.startswith("compressionencoder"):
@@ -347,11 +295,16 @@ async def callback(event):
             elif txt.startswith("compressioncrf"):
                 await saveconfig(userx, 'compress', 'crf', new_position, SAVE_TO_DATABASE)
                 await event.answer(f"✅Compress CRF - {str(new_position)}")
+            elif txt.startswith("compressionusequeuesize"):
+                await saveconfig(userx, 'compress', 'use_queue_size', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Compress Use Queue Size - {str(new_position)}")
             compress_encoder = USER_DATA()[userx]['compress']['encoder']
             compress_preset = USER_DATA()[userx]['compress']['preset']
             compress_crf = USER_DATA()[userx]['compress']['crf']
             compress_map = USER_DATA()[userx]['compress']['map']
             compress_copysub = USER_DATA()[userx]['compress']['copy_sub']
+            compress_use_queue_size = USER_DATA()[userx]['compress']['use_queue_size']
+            compress_queue_size = USER_DATA()[userx]['compress']['queue_size']
             KeyBoard.append([Button.inline(f'🍬Encoder - {str(compress_encoder)}', 'nik66bots')])
             for board in gen_keyboard(encoders_list, compress_encoder, "compressionencoder", 2, False):
                 KeyBoard.append(board)
@@ -361,6 +314,11 @@ async def callback(event):
             KeyBoard.append([Button.inline(f'🍓Map  - {str(compress_map)}', 'nik66bots')])
             for board in gen_keyboard(bool_list, compress_map, "compressionmap", 2, False):
                 KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'📻Use Queue Size  - {str(compress_use_queue_size)}', 'nik66bots')])
+            if compress_use_queue_size:
+                KeyBoard.append([Button.inline(f'🎹Queue Size Value  - {str(compress_queue_size)} (Click To Change)', 'change_compress_queue_size')])
+            for board in gen_keyboard(bool_list, compress_use_queue_size, "compressionusequeuesize", 2, False):
+                KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'♒Preset - {str(compress_preset)}', 'nik66bots')])
             for board in gen_keyboard(presets_list, compress_preset, "compressionpreset", 3, False):
                 KeyBoard.append(board)
@@ -368,24 +326,18 @@ async def callback(event):
             for board in gen_keyboard(crf_list, compress_crf, "compressioncrf", 6, False):
                 KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'↩Back', 'settings')])
-            await event.edit("⚙ Compression Settings", buttons=KeyBoard)
+            if edit:
+                await event.edit("⚙ Compression Settings", buttons=KeyBoard)
+            else:
+                try:
+                    await event.delete()
+                except:
+                    pass
+                await Config.client.send_message(event.chat.id, "⚙ Compression Settings", buttons=KeyBoard)
             return
 
-        elif txt.startswith("merge"):
-            new_position = txt.split("_", 1)[1]
-            KeyBoard = []
-            if txt.startswith("mergemap"):
-                await saveconfig(userx, 'merge', 'map', eval(new_position), SAVE_TO_DATABASE)
-                await event.answer(f"✅Merge Map - {str(new_position)}")
-            merge_map = USER_DATA()[userx]['merge']['map']
-            KeyBoard.append([Button.inline(f'🍓Map  - {str(merge_map)}', 'nik66bots')])
-            for board in gen_keyboard(bool_list, merge_map, "mergemap", 2, False):
-                KeyBoard.append(board)
-            KeyBoard.append([Button.inline(f'↩Back', 'settings')])
-            await event.edit("⚙ Merge Settings", buttons=KeyBoard)
-            return
-        
-        elif txt.startswith("watermark"):
+###############------Watermark------###############
+async def watermark_callback(event, txt, userx, edit):
             new_position = txt.split("_", 1)[1]
             KeyBoard = []
             if txt.startswith("watermarkencoder"):
@@ -412,6 +364,9 @@ async def callback(event):
             elif txt.startswith("watermarkcrf"):
                 await saveconfig(userx, 'watermark', 'crf', new_position, SAVE_TO_DATABASE)
                 await event.answer(f"✅Watermark CRF - {str(new_position)}")
+            elif txt.startswith("watermarkusequeuesize"):
+                await saveconfig(userx, 'watermark', 'use_queue_size', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Watermark Use Queue Size - {str(new_position)}")
             watermark_position = USER_DATA()[userx]['watermark']['position']
             watermark_size = USER_DATA()[userx]['watermark']['size']
             watermark_encoder = USER_DATA()[userx]['watermark']['encoder']
@@ -420,6 +375,8 @@ async def callback(event):
             watermark_crf = USER_DATA()[userx]['watermark']['crf']
             watermark_map = USER_DATA()[userx]['watermark']['map']
             watermark_copysub = USER_DATA()[userx]['watermark']['copy_sub']
+            watermark_use_queue_size = USER_DATA()[userx]['watermark']['use_queue_size']
+            watermark_queue_size = USER_DATA()[userx]['watermark']['queue_size']
             KeyBoard.append([Button.inline(f'🥽Position - {str(ws_name[watermark_position])}', 'nik66bots')])
             for board in gen_keyboard(list(ws_name.keys()), watermark_position, "watermarkposition", 2, False):
                 KeyBoard.append(board)
@@ -438,6 +395,11 @@ async def callback(event):
             KeyBoard.append([Button.inline(f'🍓Map  - {str(watermark_map)}', 'nik66bots')])
             for board in gen_keyboard(bool_list, watermark_map, "watermarkmap", 2, False):
                 KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'📻Use Queue Size  - {str(watermark_use_queue_size)}', 'nik66bots')])
+            if watermark_use_queue_size:
+                KeyBoard.append([Button.inline(f'🎹Queue Size Value  - {str(watermark_queue_size)} (Click To Change)', 'change_watermark_queue_size')])
+            for board in gen_keyboard(bool_list, watermark_use_queue_size, "watermarkusequeuesize", 2, False):
+                KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'♒Preset - {str(watermark_preset)}', 'nik66bots')])
             for board in gen_keyboard(presets_list, watermark_preset, "watermarkpreset", 3, False):
                 KeyBoard.append(board)
@@ -445,12 +407,150 @@ async def callback(event):
             for board in gen_keyboard(crf_list, watermark_crf, "watermarkcrf", 6, False):
                 KeyBoard.append(board)
             KeyBoard.append([Button.inline(f'↩Back', 'settings')])
-            await event.edit("⚙ Watermark Settings", buttons=KeyBoard)
+            if edit:
+                await event.edit("⚙ Watermark Settings", buttons=KeyBoard)
+            else:
+                try:
+                    await event.delete()
+                except:
+                    pass
+                await Config.client.send_message(event.chat.id, "⚙ Watermark Settings", buttons=KeyBoard)
             return
+
+
+###############------Merge------###############
+async def merge_callback(event, txt, userx):
+            new_position = txt.split("_", 1)[1]
+            KeyBoard = []
+            if txt.startswith("mergemap"):
+                await saveconfig(userx, 'merge', 'map', eval(new_position), SAVE_TO_DATABASE)
+                await event.answer(f"✅Merge Map - {str(new_position)}")
+            merge_map = USER_DATA()[userx]['merge']['map']
+            KeyBoard.append([Button.inline(f'🍓Map  - {str(merge_map)}', 'nik66bots')])
+            for board in gen_keyboard(bool_list, merge_map, "mergemap", 2, False):
+                KeyBoard.append(board)
+            KeyBoard.append([Button.inline(f'↩Back', 'settings')])
+            await event.edit("⚙ Merge Settings", buttons=KeyBoard)
+            return
+
+
+#////////////////////////////////////Callbacks////////////////////////////////////#
+@Client.on(events.CallbackQuery)
+async def callback(event):
+        txt = event.data.decode()
+        user_id = event.chat.id
+        userx = event.sender.id
+        if userx not in USER_DATA():
+            await new_user(userx, SAVE_TO_DATABASE)
+        
+        if txt.startswith("settings"):
+            text = f"⚙ Hi {get_mention(event)} Choose Your Settings"
+            await event.edit(text, buttons=[
+            [Button.inline('#️⃣ General', 'general_settings')],
+            [Button.inline('📝 Progress Bar', 'progress_settings')],
+            [Button.inline('🏮 Compression', 'compression_settings')],
+            [Button.inline('🍧 Merge', 'merge_settings')],
+            [Button.inline('🛺 Watermark', 'watermark_settings')],
+            [Button.inline('⭕Close Settings', 'close_settings')]
+        ])
+            return
+        
+        elif txt=="close_settings":
+            await event.delete()
+            return
+        
+        elif txt.startswith("resetdb"):
+            new_position = eval(txt.split("_", 1)[1])
+            if new_position:
+                reset = await resetdatabase(SAVE_TO_DATABASE)
+                if reset:
+                    text = f"✔Database Reset Successfull"
+                else:
+                    text = f"❌Database Reset Failed"
+                await event.answer(text, alert=True)
+            else:
+                await event.answer(f"Why You Wasting My Time.", alert=True)
+            return
+        
+        
+        elif txt.startswith("renew"):
+            new_position = eval(txt.split("_", 1)[1])
+            if new_position:
+                g_d_list = ['app.py','sample_config.env','start.sh','.gitignore','LICENSE','README.md', 'sthumb.jpg','Logging.txt', 'db_handler.py', 'config.py', 'bot', 'requirements.txt', 'Dockerfile', 'config.env', 'helper_fns', 'docker-compose.yml', 'thumb.jpg', 'main.py', 'userdata']
+                g_list = listdir()
+                g_del_list = list(set(g_list) - set(g_d_list))
+                deleted = []
+                if len(g_del_list) != 0:
+                    for f in g_del_list:
+                        if isfile(f):
+                            if not(f.endswith(".session")) and not(f.endswith(".session-journal")):
+                                print(f)
+                                await delete_trash(f)
+                                deleted.append(f)
+                        else:
+                            print(f)
+                            await delete_all(f)
+                            deleted.append(f)
+                    text = f"✔Deleted {len(deleted)} objects 🚮\n\n{str(deleted)}"
+                    try:
+                            await event.answer(text, alert=True)
+                    except:
+                        await event.edit(text)
+                else:
+                    await event.answer(f"Nothing to clear 🙄", alert=True)
+                    return
+            else:
+                await event.answer(f"Why You Wasting My Time.", alert=True)
+                return
+        
+        
+        elif txt.startswith("general"):
+            await general_callback(event, txt, userx, user_id)
+            return
+        
+        
+        elif txt.startswith("progress"):
+            await progress_callback(event, txt, userx)
+            return
+        
+        
+        elif txt.startswith("compression"):
+            await compress_callback(event, txt, userx, True)
+            return
+
+
+        elif txt.startswith("merge"):
+            await merge_callback(event, txt, userx)
+            return
+        
+        
+        elif txt.startswith("watermark"):
+            await watermark_callback(event, txt, userx, True)
+            return
+        
         
         elif txt=="nik66bots":
             await event.answer(f"⚡Bot By Sahil⚡", alert=True)
             return
+        
+        
+        elif txt.startswith("change"):
+            if "_queue_size" in txt:
+                queue_size_input= await get_text_data(user_id, userx, event, 120, "Send Queue Size")
+                if queue_size_input:
+                    try:
+                        queue_size = int(queue_size_input.message.message)
+                    except:
+                        await queue_size_input.reply("❗Invalid Input")
+                        return
+                    if txt=="change_compress_queue_size":
+                        await saveconfig(userx, 'compress', 'queue_size', str(queue_size), SAVE_TO_DATABASE)
+                        await compress_callback(event, "compression_settings", userx, False)
+                    elif txt=="change_watermark_queue_size":
+                        await saveconfig(userx, 'watermark', 'queue_size', str(queue_size), SAVE_TO_DATABASE)
+                        await watermark_callback(event, "watermark_settings", userx, False)
+            return
+        
         
         elif txt=="custom_metedata":
             cmetadata = USER_DATA()[userx]['metadata']

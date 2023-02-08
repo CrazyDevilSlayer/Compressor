@@ -8,6 +8,7 @@ from os import execl
 from sys import argv, executable
 from helper_fns.Queue import get_queue
 from helper_fns.Processor import start_process, get_filename
+from helper_fns.Speed_Test import speedtest
 
 
 
@@ -668,4 +669,17 @@ async def _savewatermark(event):
 @Client.on(events.NewMessage(incoming=True, pattern='/stats'))
 async def _stats_msg(event):
     await event.reply(str(get_host_stats()), parse_mode='html')
+    return
+
+###############------Speed_Test------###############
+@Client.on(events.NewMessage(incoming=True, pattern='/speedtest'))
+async def _speed_test(event):
+    user_id = event.message.chat.id
+    reply = await event.reply("⏳Running Speed Test, Please Wait.....")
+    try:
+        file_path, caption = await speedtest()
+        await Client.send_file(user_id, file=file_path, caption=caption, reply_to=event.message, allow_cache=False, parse_mode='html')
+    except Exception as e:
+        await event.reply(str(e))
+    await reply.delete()
     return

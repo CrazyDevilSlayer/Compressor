@@ -36,6 +36,7 @@ renew - Renew Storage
 resetdb - Reset Database
 time - Get Bot Uptime
 stats - Get Stats
+speedtest - SpeedTest
 settings - Settings Section
 restart - Restart Bot
 ```
