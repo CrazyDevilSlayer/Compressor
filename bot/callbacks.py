@@ -114,7 +114,7 @@ async def callback(event):
         elif txt.startswith("renew"):
             new_position = eval(txt.split("_", 1)[1])
             if new_position:
-                g_d_list = ['.gitignore','LICENSE','README.md', 'sthumb.jpg','Logging.txt', 'db_handler.py', 'config.py', 'bot', 'requirements.txt', 'Dockerfile', 'config.env', 'helper_fns', 'docker-compose.yml', 'thumb.jpg', 'main.py', 'userdata']
+                g_d_list = ['app.py','sample_config.env','start.sh','.gitignore','LICENSE','README.md', 'sthumb.jpg','Logging.txt', 'db_handler.py', 'config.py', 'bot', 'requirements.txt', 'Dockerfile', 'config.env', 'helper_fns', 'docker-compose.yml', 'thumb.jpg', 'main.py', 'userdata']
                 g_list = listdir()
                 g_del_list = list(set(g_list) - set(g_d_list))
                 deleted = []
