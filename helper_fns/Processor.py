@@ -17,6 +17,7 @@ from aiofiles import open as aiofiles_open
 from helper_fns.Telethon_FNs import download_tg_file, upload_tg_video
 from helper_fns.Queue import get_queue
 from urllib.parse import unquote
+from telethon.tl.types import DocumentAttributeVideo
 
 
 #////////////////////////////////////Variables////////////////////////////////////#
@@ -263,7 +264,7 @@ async def send_sample_video(tgclient, event, user_id, userx, duration, input_vid
                 if sample_result and exists(sample_name):
                     sscaption = f"🎞 Sample Video"
                     try:
-                        await tgclient.send_file(user_id, file=sample_name, allow_cache=False, reply_to=event.message, caption=sscaption)
+                        await tgclient.send_file(user_id, file=sample_name, allow_cache=False, reply_to=event.message, caption=sscaption, thumb="sthumb.jpg", supports_streaming=True, attributes=(DocumentAttributeVideo(get_video_duration(sample_name), 0, 0),))
                     except:
                         pass
                     remove(sample_name)
