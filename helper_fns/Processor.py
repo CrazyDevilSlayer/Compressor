@@ -659,9 +659,9 @@ async def upload_drive(tgclient, event, user_id, reply, caption, userx, r_config
                                                                     link_text = f"⛓Link: `https://drive.google.com/file/d/{upload[3]}/view`"
                                                                 else:
                                                                     link_text = f"⛓File ID: `{upload[3]}`"
-                                                                text = f"✅Successfully Uploade To {str(drive_name)}\n\n{link_text}\n\n💽Size: {fisize}\n\n{caption}"
+                                                                text = f"✅Successfully Uploaded To {str(drive_name)}\n\n{link_text}\n\n💽Size: {fisize}\n\n{caption}"
                                                         else:
-                                                                text = f"✅Successfully Uploade To {str(drive_name)}\n\n❗Failed To File ID: `{str(upload[3])}`\n\n{caption}"
+                                                                text = f"✅Successfully Uploaded To {str(drive_name)}\n\n❗Failed To File ID: `{str(upload[3])}`\n\n{caption}"
                                                         await event.reply(text)
                                 except Exception as e:
                                         await event.reply(f"❌Error While Uploading To Drive\n\n{str(e)}")
