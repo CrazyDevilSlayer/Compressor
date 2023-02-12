@@ -10,7 +10,6 @@ RUN python3 -m venv venv
 COPY . /app
 WORKDIR /app
 RUN chmod 777 /app
-RUN pip3 install -r requirements.txt
 RUN wget https://rclone.org/install.sh
 RUN chmod 777 ./install.sh
 RUN bash install.sh
