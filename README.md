@@ -40,7 +40,7 @@ speedtest - SpeedTest
 settings - Settings Section
 restart - Restart Bot
 ```
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/CrazyDevilSlayer/Compressor)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=github.com/CrazyDevilSlayer/Compressor)
 
 
 ### Copyright & License
